@@ -5,8 +5,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
-  // @ts-ignore
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
 });
 
 const inter = Inter({
@@ -32,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${orbitron.variable} ${inter.variable} ${rajdhani.variable} font-sans text-white antialiased`}>
         <LanguageProvider>
           {children}
