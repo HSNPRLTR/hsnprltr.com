@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0c10;
+  --foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-orbitron: var(--font-orbitron);
+  --font-inter: var(--font-inter);
+  --font-rajdhani: var(--font-rajdhani);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-orbitron), sans-serif;
+}
+
+.glass {
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neon-border {
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slow-spin-1 {
+  animation: slow-spin 120s linear infinite;
+}
+.animate-slow-spin-2 {
+  animation: slow-spin 160s linear infinite;
+}
+.animate-slow-spin-3 {
+  animation: slow-spin 200s linear infinite;
+}
+.animate-slow-spin-4 {
+  animation: slow-spin 240s linear infinite;
+}
+.animate-slow-spin-5 {
+  animation: slow-spin 280s linear infinite;
+}
