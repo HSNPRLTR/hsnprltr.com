@@ -19,8 +19,8 @@ export const getCarGameImages = () => [
 export const getBackgroundPlanets = () => [
   { src: "/planets/planet.png", x: "10vw", y: "80vh", size: "8vw", opacity: 0.4 },
   { src: "/planets/planet2.png", x: "60vw", y: "10vh", size: "6vw", opacity: 0.1 },
-  { src: "/planets/planet3.png", x: "88vw", y: "40vh", size: "5vw", opacity: 0.35 },
-  { src: "/planets/planet4.png", x: "48vw", y: "75vh", size: "10vw", opacity: 0.45 },
+  { src: "/planets/planet3.png", x: "88vw", y: "40vh", size: "5vw", opacity: 0.2 },
+  { src: "/planets/planet4.png", x: "48vw", y: "75vh", size: "8vw", opacity: 0.3 },
   { src: "/planets/planet5.png", x: "60vw", y: "30vh", size: "7vw", opacity: 0.20 },
 ];
 
@@ -118,7 +118,7 @@ export const getGameProjects = (t: (key: any) => string) => [
         "/gallery/mermaiden/Mermaiden Doc/doc3.png",
         "/gallery/mermaiden/Mermaiden Doc/doc4.png"
       ],
-      docLink: "https://drive.google.com/file/d/1dPvCQJGFT8N5rvZVa_n2uGqQhE7B056z/view?usp=drive_link"
+      docLink: "https://drive.google.com/file/d/1_Pg77maf8Ekhm4ACzzhtGFcIkAEcRpC_/view?usp=drive_link"
     },
     itchLink: "https://hsnprltr.itch.io/mermaiden"
   },
@@ -304,7 +304,7 @@ export const getEducations = (t: (key: any) => string, language: string) => [
     title: language === "tr" ? "Atatürk Anadolu Lisesi" : "Ataturk Anatolian High School",
     issuer: language === "tr" ? "Lise Mezuniyeti" : "High School Graduation",
     date: "2019 - 2023",
-    skills: language === "tr" 
+    skills: language === "tr"
       ? ["Temel Bilimler", "Sayısal Ağırlıklı", "Edebiyat", "Felsefe", "Yabancı Dil"]
       : ["Basic Sciences", "Quantitative Stream", "Literature", "Philosophy", "Foreign Language"],
     description: t("edu_lise_desc"),
@@ -322,7 +322,7 @@ export const getEducations = (t: (key: any) => string, language: string) => [
     title: t("edu_lang_title"),
     issuer: t("edu_lang_issuer"),
     date: t("edu_lang_date"),
-    skills: language === "tr" 
+    skills: language === "tr"
       ? ["Okuma", "Yazma", "Dinleme"]
       : ["Reading", "Writing", "Listening"],
     description: t("edu_lang_desc"),

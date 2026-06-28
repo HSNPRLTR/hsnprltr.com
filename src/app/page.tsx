@@ -516,7 +516,7 @@ export default function Home() {
             {backgroundPlanets.map((bp, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.2 }}
                 animate={!isVideoIntroActive ? {
                   opacity: isBlackholeHovered ? 0 : bp.opacity,
                   scale: isBlackholeHovered ? 0 : 1,
@@ -535,7 +535,7 @@ export default function Home() {
                 style={{
                   width: bp.size,
                   height: bp.size,
-                  transform: 'translate(-50%, -50%)',
+                  transform: 'translate(-25%, -25%)',
                 }}
               >
                 <div className={`w-full h-full relative animate-slow-spin-${(i % 5) + 1}`}>
@@ -544,7 +544,7 @@ export default function Home() {
                     alt="Decorative Planet"
                     fill
                     sizes="12vw"
-                    className="object-contain filter blur-[1.5px] brightness-75"
+                    className="object-contain filter blur-[2px] brightness-75"
                   />
                 </div>
               </motion.div>

@@ -45,17 +45,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .animate-slow-spin-1 {
-  animation: slow-spin 120s linear infinite;
+  animation: slow-spin 80s linear infinite;
 }
 .animate-slow-spin-2 {
-  animation: slow-spin 160s linear infinite;
+  animation: slow-spin 110s linear infinite;
 }
 .animate-slow-spin-3 {
-  animation: slow-spin 200s linear infinite;
+  animation: slow-spin 140s linear infinite;
 }
 .animate-slow-spin-4 {
-  animation: slow-spin 240s linear infinite;
+  animation: slow-spin 170s linear infinite;
 }
 .animate-slow-spin-5 {
-  animation: slow-spin 280s linear infinite;
+  animation: slow-spin 200s linear infinite;
 }
