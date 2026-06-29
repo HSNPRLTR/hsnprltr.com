@@ -124,6 +124,20 @@ export default function ProjectRow({
   }, [onModalToggle]);
 
   useEffect(() => {
+    const handleCloseLocalModals = () => {
+      setIsGalleryOpen(false);
+      setIsDocOpen(false);
+      setActiveImageIdx(null);
+      setActiveDocImageIdx(null);
+    };
+
+    window.addEventListener("close-local-modals", handleCloseLocalModals);
+    return () => {
+      window.removeEventListener("close-local-modals", handleCloseLocalModals);
+    };
+  }, []);
+
+  useEffect(() => {
     const isOpen = isGalleryOpen || isDocOpen || activeImageIdx !== null || activeDocImageIdx !== null;
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -191,8 +205,8 @@ export default function ProjectRow({
                   <motion.div
                     className="absolute w-14 h-14 cursor-pointer pointer-events-auto rounded-full -mt-7 -ml-7"
                     style={{
-                      top: "5%",
-                      left: "5%",
+                      top: "12%",
+                      left: "12%",
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -360,42 +374,51 @@ export default function ProjectRow({
               <X size={28} />
             </button>
 
-            {/* Left Control Arrow */}
-            <button
-              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-              onClick={handlePrev}
-            >
-              <ChevronLeft size={32} />
-            </button>
-
-            {/* Main Image Container */}
-            <motion.div
-              key={activeImageIdx}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="relative w-full max-w-5xl h-[80vh] flex items-center justify-center p-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={gallery[activeImageIdx]}
-                alt={`${title} screenshot large ${activeImageIdx}`}
-                fill
-                className="object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] cursor-pointer"
-                sizes="(max-width: 1200px) 100vw, 1200px"
-                priority
-                onClick={() => setActiveImageIdx(null)}
-              />
-            </motion.div>
-
-            {/* Right Control Arrow */}
-            <button
-              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-              onClick={handleNext}
-            >
-              <ChevronRight size={32} />
-            </button>
+             {/* Left Control Arrow */}
+             <button
+               className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
+               onClick={handlePrev}
+             >
+               <ChevronLeft size={32} />
+             </button>
+ 
+             {/* Main Image Container */}
+             <motion.div
+               key={activeImageIdx}
+               drag="x"
+               dragConstraints={{ left: 0, right: 0 }}
+               dragElastic={0.6}
+               onDragEnd={(e, info) => {
+                 if (info.offset.x < -50) {
+                   handleNext();
+                 } else if (info.offset.x > 50) {
+                   handlePrev();
+                 }
+               }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.95 }}
+               transition={{ duration: 0.3 }}
+               className="relative w-full max-w-5xl h-[80vh] flex items-center justify-center p-4 cursor-grab active:cursor-grabbing"
+               onClick={(e) => e.stopPropagation()}
+             >
+               <Image
+                 src={gallery[activeImageIdx]}
+                 alt={`${title} screenshot large ${activeImageIdx}`}
+                 fill
+                 className="object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] pointer-events-none select-none"
+                 sizes="(max-width: 1200px) 100vw, 1200px"
+                 priority
+               />
+             </motion.div>
+ 
+             {/* Right Control Arrow */}
+             <button
+               className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
+               onClick={handleNext}
+             >
+               <ChevronRight size={32} />
+             </button>
 
             {/* Image Indicator / Counter */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 font-orbitron text-xs tracking-widest text-white/40 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md">
@@ -499,7 +522,7 @@ export default function ProjectRow({
 
             {/* Left Control Arrow */}
             <button
-              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={handleDocPrev}
             >
               <ChevronLeft size={32} />
@@ -508,27 +531,36 @@ export default function ProjectRow({
             {/* Main Image Container */}
             <motion.div
               key={activeDocImageIdx}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) {
+                  handleDocNext();
+                } else if (info.offset.x > 50) {
+                  handleDocPrev();
+                }
+              }}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[90vw] aspect-[210/297] h-[91vh] flex items-center justify-center p-3"
+              className="relative w-full max-w-[90vw] aspect-[210/297] h-[91vh] flex items-center justify-center p-3 cursor-grab active:cursor-grabbing"
               onClick={(e) => e.stopPropagation()}
             >
               <Image
                 src={satellite.docImages[activeDocImageIdx]}
                 alt={`Doc large ${activeDocImageIdx + 1}`}
                 fill
-                className="object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] cursor-pointer"
+                className="object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] pointer-events-none select-none"
                 sizes="(max-width: 1200px) 100vw, 1200px"
                 priority
-                onClick={() => setActiveDocImageIdx(null)}
               />
             </motion.div>
 
             {/* Right Control Arrow */}
             <button
-              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={handleDocNext}
             >
               <ChevronRight size={32} />

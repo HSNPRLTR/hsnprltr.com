@@ -158,6 +158,14 @@ const PlanetWrapper = ({ planet, mouseX, mouseY, i, onHoverChange, isBlackholeHo
 };
 
 const MovingSatellite = ({ onClick }: { onClick: () => void }) => {
+  const [isBlinking, setIsBlinking] = React.useState(true);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    setIsBlinking(false);
+    onClick();
+  };
+
   return (
     <div className="relative w-full h-0 pointer-events-none select-none overflow-visible z-20">
       <motion.div
@@ -175,12 +183,42 @@ const MovingSatellite = ({ onClick }: { onClick: () => void }) => {
       >
         <motion.div
           className="w-full h-full cursor-pointer pointer-events-auto"
-          onClick={onClick}
-          whileHover={{
-            scale: 1.25,
-            filter: "brightness(1.25) drop-shadow(0 0 15px rgba(34,211,238,0.8))"
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          onClick={handleClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          animate={
+            isHovered
+              ? {
+                  scale: 1.25,
+                  opacity: 1,
+                  filter: "brightness(1.25) drop-shadow(0 0 15px rgba(34,211,238,0.8))"
+                }
+              : isBlinking
+              ? {
+                  scale: 1,
+                  opacity: [0.4, 1, 0.4],
+                  filter: "brightness(1) drop-shadow(0 0 5px rgba(34,211,238,0.2))"
+                }
+              : {
+                  scale: 1,
+                  opacity: 1,
+                  filter: "brightness(1) drop-shadow(0 0 10px rgba(34,211,238,0.3))"
+                }
+          }
+          transition={
+            isHovered
+              ? { type: "spring", stiffness: 300, damping: 15 }
+              : isBlinking
+              ? {
+                  opacity: {
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  },
+                  scale: { duration: 0.3 }
+                }
+              : { duration: 0.3 }
+          }
         >
           <Image
             src="/Satellite/uydu.png"
@@ -270,7 +308,7 @@ export default function Home() {
   const [activeEducation, setActiveEducation] = React.useState<number | null>(null);
   const [isMobileDevice, setIsMobileDevice] = React.useState(false);
   const [openProjectModals, setOpenProjectModals] = React.useState<Record<string, boolean>>({});
-  const [isVideoIntroActive, setIsVideoIntroActive] = React.useState(true);
+  const [isVideoIntroActive, setIsVideoIntroActive] = React.useState(false);
   const [isInteractive, setIsInteractive] = React.useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = React.useState(true);
 
@@ -295,6 +333,60 @@ export default function Home() {
       };
     });
   }, []);
+
+  // Listen for back button on mobile when modals are open
+  React.useEffect(() => {
+    const isAnyModalOpen =
+      activeSoftwareProject !== null ||
+      activeCertificate !== null ||
+      activeEducation !== null ||
+      enlargedImageSrc !== null ||
+      enlargedShipImageSrc !== null ||
+      enlargedSoftwareImageSrc !== null ||
+      isSatelliteModalOpen ||
+      isShipModalOpen ||
+      Object.values(openProjectModals).some(Boolean);
+
+    const handlePopState = () => {
+      if (isAnyModalOpen) {
+        setActiveSoftwareProject(null);
+        setActiveCertificate(null);
+        setActiveEducation(null);
+        setEnlargedImageSrc(null);
+        setEnlargedShipImageSrc(null);
+        setEnlargedSoftwareImageSrc(null);
+        setIsSatelliteModalOpen(false);
+        setIsShipModalOpen(false);
+        window.dispatchEvent(new Event("close-local-modals"));
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    if (isAnyModalOpen) {
+      if (window.history.state?.modalOpen !== true) {
+        window.history.pushState({ modalOpen: true }, "", window.location.href);
+      }
+    } else {
+      if (window.history.state?.modalOpen === true) {
+        window.history.back();
+      }
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [
+    activeSoftwareProject,
+    activeCertificate,
+    activeEducation,
+    enlargedImageSrc,
+    enlargedShipImageSrc,
+    enlargedSoftwareImageSrc,
+    isSatelliteModalOpen,
+    isShipModalOpen,
+    openProjectModals
+  ]);
 
   const isInitial = React.useRef(true);
 
@@ -457,12 +549,53 @@ export default function Home() {
   }, [isVideoIntroActive]);
 
   React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+
+    if (isMobile) {
+      const handleOrientation = (e: DeviceOrientationEvent) => {
+        if (e.gamma !== null && e.beta !== null) {
+          const clampedGamma = Math.max(-30, Math.min(30, e.gamma));
+          const clampedBeta = Math.max(30, Math.min(90, e.beta)) - 60;
+
+          const windowHalfX = window.innerWidth / 2;
+          const windowHalfY = window.innerHeight / 2;
+
+          mouseX.set(windowHalfX + (clampedGamma / 30) * windowHalfX);
+          mouseY.set(windowHalfY + (clampedBeta / 30) * windowHalfY);
+        }
+      };
+
+      const requestOrientationPermission = () => {
+        const DeviceOrientationEventClass = (window as any).DeviceOrientationEvent;
+        if (
+          DeviceOrientationEventClass &&
+          typeof DeviceOrientationEventClass.requestPermission === "function"
+        ) {
+          DeviceOrientationEventClass.requestPermission()
+            .then((permissionState: string) => {
+              if (permissionState === "granted") {
+                window.addEventListener("deviceorientation", handleOrientation, true);
+              }
+            })
+            .catch(console.error);
+        }
+      };
+
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      document.addEventListener("click", requestOrientationPermission, { once: true });
+
+      return () => {
+        window.removeEventListener("deviceorientation", handleOrientation, true);
+        document.removeEventListener("click", requestOrientationPermission);
+      };
+    } else {
+      const handleMouseMove = (e: MouseEvent) => {
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+      };
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
   }, [mouseX, mouseY]);
 
   const isAdValid = contactForm.ad.trim().length > 2;
@@ -928,34 +1061,42 @@ export default function Home() {
                       scale: activeSoftwareProject !== null && isSelected ? 0.95 : 1
                     }}
                     transition={{ duration: 0.2 }}
-                    className="glass p-10 rounded-3xl border border-white/5 hover:border-cyan-500/30 transition-colors group relative overflow-hidden cursor-pointer"
+                    className="glass p-10 rounded-3xl border border-white/5 hover:border-cyan-500/30 transition-colors group relative overflow-hidden cursor-pointer flex flex-col justify-between h-full min-h-[380px]"
                     whileHover={activeSoftwareProject === null ? {
                       y: -8,
                       boxShadow: "0 20px 40px -15px rgba(34,211,238,0.15)",
                       transition: { type: "spring", stiffness: 300, damping: 20, delay: 0 }
                     } : undefined}
                   >
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {React.cloneElement(project.icon as React.ReactElement<any>, { size: 120 })}
-                    </div>
-                    <div className="text-cyan-500 mb-6 group-hover:scale-110 transition-transform origin-left">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {React.cloneElement(project.icon as React.ReactElement<any>, { size: 40 })}
-                    </div>
-                    <h3 className="text-2xl font-orbitron mb-4 text-white group-hover:text-cyan-400 transition-colors">
-                      {project.title}
-                    </h3>
-                    <p className="text-lg font-rajdhani text-gray-400 leading-relaxed mb-6">
-                      {project.description}
-                    </p>
+                    <div className="flex flex-col flex-grow">
+                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {React.cloneElement(project.icon as React.ReactElement<any>, { size: 120 })}
+                      </div>
+                      <div className="text-cyan-500 mb-6 group-hover:scale-110 transition-transform origin-left w-12 h-12 bg-cyan-500/10 rounded-xl border border-cyan-500/20 flex items-center justify-center">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {React.cloneElement(project.icon as React.ReactElement<any>, { size: 24 })}
+                      </div>
+                      <h3 className="text-2xl font-orbitron mb-4 text-white group-hover:text-cyan-400 transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="text-lg font-rajdhani text-gray-400 leading-relaxed mb-6 flex-grow">
+                        {project.description}
+                      </p>
 
-                    <div className="flex flex-wrap gap-2">
-                      {project.techStack.map((tech, idx) => (
-                        <span key={idx} className="text-xs font-orbitron px-3 py-1 rounded-full bg-white/5 border border-white/10 text-cyan-400/80">
-                          {tech}
-                        </span>
-                      ))}
+                      <div className="flex flex-wrap gap-2 mb-8">
+                        {project.techStack.map((tech, idx) => (
+                          <span key={idx} className="text-xs font-orbitron px-3 py-1 rounded-full bg-white/5 border border-white/10 text-cyan-400/80">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 group-hover:bg-cyan-500/10 border border-white/10 group-hover:border-cyan-500/30 rounded-xl text-white font-orbitron text-xs tracking-wider transition-all">
+                        {t("cert_detay_gor")}
+                      </div>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -1365,10 +1506,10 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Terminal / Control Panel Layout */}
           <motion.div
-            initial={{ opacity: 0, scaleY: 0.005, scaleX: 0.3 }}
-            whileInView={{ opacity: 1, scaleY: 1, scaleX: 1 }}
-            viewport={{ once: false, amount: 0.15 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.05 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="w-full glass border border-cyan-500/20 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col"
           >
             {/* Terminal Header Bar */}
@@ -1900,7 +2041,7 @@ export default function Home() {
 
             {/* Left Control Arrow */}
             <button
-              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const currentIdx = inhaledPastImages.indexOf(enlargedImageSrc || "");
@@ -1916,24 +2057,38 @@ export default function Home() {
             {/* Poster Image Container */}
             <motion.div
               key={enlargedImageSrc}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={(e, info) => {
+                const currentIdx = inhaledPastImages.indexOf(enlargedImageSrc || "");
+                if (currentIdx !== -1) {
+                  if (info.offset.x < -50) {
+                    const nextIdx = (currentIdx + 1) % inhaledPastImages.length;
+                    setEnlargedImageSrc(inhaledPastImages[nextIdx]);
+                  } else if (info.offset.x > 50) {
+                    const prevIdx = (currentIdx - 1 + inhaledPastImages.length) % inhaledPastImages.length;
+                    setEnlargedImageSrc(inhaledPastImages[prevIdx]);
+                  }
+                }
+              }}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-6 ${enlargedImageAspect}`}
+              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-6 cursor-grab active:cursor-grabbing ${enlargedImageAspect}`}
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={enlargedImageSrc || undefined}
                 alt="Inhaled Past Enlarged Screenshot"
-                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] cursor-pointer"
-                onClick={() => setEnlargedImageSrc(null)}
+                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] pointer-events-none select-none"
               />
             </motion.div>
 
             {/* Right Control Arrow */}
             <button
-              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const currentIdx = inhaledPastImages.indexOf(enlargedImageSrc || "");
@@ -2045,7 +2200,7 @@ export default function Home() {
 
             {/* Left Control Arrow */}
             <button
-              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const currentIdx = carGameImages.indexOf(enlargedShipImageSrc || "");
@@ -2061,24 +2216,38 @@ export default function Home() {
             {/* Main Image Container */}
             <motion.div
               key={enlargedShipImageSrc}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={(e, info) => {
+                const currentIdx = carGameImages.indexOf(enlargedShipImageSrc || "");
+                if (currentIdx !== -1) {
+                  if (info.offset.x < -50) {
+                    const nextIdx = (currentIdx + 1) % carGameImages.length;
+                    setEnlargedShipImageSrc(carGameImages[nextIdx]);
+                  } else if (info.offset.x > 50) {
+                    const prevIdx = (currentIdx - 1 + carGameImages.length) % carGameImages.length;
+                    setEnlargedShipImageSrc(carGameImages[prevIdx]);
+                  }
+                }
+              }}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2"
+              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={enlargedShipImageSrc || undefined}
                 alt="Car Game Enlarged Screenshot"
-                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] cursor-pointer"
-                onClick={() => setEnlargedShipImageSrc(null)}
+                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] pointer-events-none select-none"
               />
             </motion.div>
 
             {/* Right Control Arrow */}
             <button
-              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const currentIdx = carGameImages.indexOf(enlargedShipImageSrc || "");
@@ -2119,7 +2288,7 @@ export default function Home() {
 
             {/* Left Control Arrow */}
             <button
-              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)] cursor-pointer"
+              className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const gallery = softwareProjects[activeSoftwareProject].gallery;
@@ -2136,24 +2305,39 @@ export default function Home() {
             {/* Main Image Container */}
             <motion.div
               key={enlargedSoftwareImageSrc}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={(e, info) => {
+                const gallery = softwareProjects[activeSoftwareProject].gallery;
+                const currentIdx = gallery.indexOf(enlargedSoftwareImageSrc || "");
+                if (currentIdx !== -1) {
+                  if (info.offset.x < -50) {
+                    const nextIdx = (currentIdx + 1) % gallery.length;
+                    setEnlargedSoftwareImageSrc(gallery[nextIdx]);
+                  } else if (info.offset.x > 50) {
+                    const prevIdx = (currentIdx - 1 + gallery.length) % gallery.length;
+                    setEnlargedSoftwareImageSrc(gallery[prevIdx]);
+                  }
+                }
+              }}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2"
+              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={enlargedSoftwareImageSrc || undefined}
                 alt="Software Project Enlarged Screenshot"
-                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] cursor-pointer"
-                onClick={() => setEnlargedSoftwareImageSrc(null)}
+                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(6,182,212,0.15)] pointer-events-none select-none"
               />
             </motion.div>
 
             {/* Right Control Arrow */}
             <button
-              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400 hover:scale-110 transition-all p-4 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 rounded-full border border-white/10 z-50 shadow-[0_0_15px_rgba(0,0,0,0.5)] cursor-pointer"
+              className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-all p-4 bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 z-50 shadow-[0_0_20px_rgba(6,182,212,0.35)] rounded-full hidden md:block cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const gallery = softwareProjects[activeSoftwareProject].gallery;

@@ -174,13 +174,47 @@ const ThreeStarfield = ({
       renderer.setSize(WIDTH, HEIGHT);
     };
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+
     const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX - windowHalfX;
       mouseY = e.clientY - windowHalfY;
     };
 
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (e.gamma !== null && e.beta !== null) {
+        const clampedGamma = Math.max(-30, Math.min(30, e.gamma));
+        const clampedBeta = Math.max(30, Math.min(90, e.beta)) - 60;
+        
+        mouseX = (clampedGamma / 30) * windowHalfX;
+        mouseY = (clampedBeta / 30) * windowHalfY;
+      }
+    };
+
+    const requestDeviceOrientationPermission = () => {
+      const DeviceOrientationEventClass = (window as any).DeviceOrientationEvent;
+      if (
+        DeviceOrientationEventClass &&
+        typeof DeviceOrientationEventClass.requestPermission === "function"
+      ) {
+        DeviceOrientationEventClass.requestPermission()
+          .then((permissionState: string) => {
+            if (permissionState === "granted") {
+              window.addEventListener("deviceorientation", handleOrientation, true);
+            }
+          })
+          .catch(console.error);
+      }
+    };
+
     window.addEventListener("resize", onWindowResize, false);
-    document.addEventListener("mousemove", onMouseMove, false);
+
+    if (isMobile) {
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      document.addEventListener("click", requestDeviceOrientationPermission, { once: true });
+    } else {
+      document.addEventListener("mousemove", onMouseMove, false);
+    }
 
     function starForge() {
       const starQty = 45000;
@@ -315,7 +349,12 @@ const ThreeStarfield = ({
 
     return () => {
       window.removeEventListener("resize", onWindowResize);
-      document.removeEventListener("mousemove", onMouseMove);
+      if (isMobile) {
+        window.removeEventListener("deviceorientation", handleOrientation, true);
+        document.removeEventListener("click", requestDeviceOrientationPermission);
+      } else {
+        document.removeEventListener("mousemove", onMouseMove);
+      }
 
       if (currentContainer) {
         currentContainer.removeChild(renderer.domElement);
