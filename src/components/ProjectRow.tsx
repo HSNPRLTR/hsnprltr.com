@@ -93,15 +93,15 @@ export default function ProjectRow({
   };
 
   const handleDocPrev = (e?: React.MouseEvent) => {
-    if (e && satellite) {
-      e.stopPropagation();
+    if (e) e.stopPropagation();
+    if (satellite) {
       setActiveDocImageIdx((prev) => (prev !== null ? (prev - 1 + satellite.docImages.length) % satellite.docImages.length : 0));
     }
   };
 
   const handleDocNext = (e?: React.MouseEvent) => {
-    if (e && satellite) {
-      e.stopPropagation();
+    if (e) e.stopPropagation();
+    if (satellite) {
       setActiveDocImageIdx((prev) => (prev !== null ? (prev + 1) % satellite.docImages.length : 0));
     }
   };
@@ -400,6 +400,7 @@ export default function ProjectRow({
                exit={{ opacity: 0, scale: 0.95 }}
                transition={{ duration: 0.3 }}
                className="relative w-full max-w-5xl h-[80vh] flex items-center justify-center p-4 cursor-grab active:cursor-grabbing"
+               style={{ touchAction: "none" }}
                onClick={(e) => e.stopPropagation()}
              >
                <Image
@@ -545,7 +546,8 @@ export default function ProjectRow({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[90vw] aspect-[210/297] h-[91vh] flex items-center justify-center p-3 cursor-grab active:cursor-grabbing"
+              className="relative w-full max-w-[90vw] md:max-w-2xl h-[80vh] flex items-center justify-center p-3 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
               <Image

@@ -2043,6 +2043,7 @@ export default function Home() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-6 cursor-grab active:cursor-grabbing ${enlargedImageAspect}`}
+              style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
               <img
@@ -2202,6 +2203,7 @@ export default function Home() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
               <img
@@ -2292,6 +2294,7 @@ export default function Home() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
               <img
