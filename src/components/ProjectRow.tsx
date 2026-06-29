@@ -166,7 +166,7 @@ export default function ProjectRow({
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: false, amount: 0.2 }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.8 }}
             className="relative aspect-square w-full max-w-[500px] mx-auto"
           >
@@ -248,7 +248,7 @@ export default function ProjectRow({
           <motion.div
             initial={{ opacity: 0, x: isReversed ? -50 : 50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl md:text-6xl font-bold font-orbitron text-white mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">

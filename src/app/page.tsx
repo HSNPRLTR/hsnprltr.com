@@ -552,42 +552,8 @@ export default function Home() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
 
     if (isMobile) {
-      const handleOrientation = (e: DeviceOrientationEvent) => {
-        if (e.gamma !== null && e.beta !== null) {
-          const clampedGamma = Math.max(-30, Math.min(30, e.gamma));
-          const clampedBeta = Math.max(30, Math.min(90, e.beta)) - 60;
-
-          const windowHalfX = window.innerWidth / 2;
-          const windowHalfY = window.innerHeight / 2;
-
-          mouseX.set(windowHalfX + (clampedGamma / 30) * windowHalfX);
-          mouseY.set(windowHalfY + (clampedBeta / 30) * windowHalfY);
-        }
-      };
-
-      const requestOrientationPermission = () => {
-        const DeviceOrientationEventClass = (window as any).DeviceOrientationEvent;
-        if (
-          DeviceOrientationEventClass &&
-          typeof DeviceOrientationEventClass.requestPermission === "function"
-        ) {
-          DeviceOrientationEventClass.requestPermission()
-            .then((permissionState: string) => {
-              if (permissionState === "granted") {
-                window.addEventListener("deviceorientation", handleOrientation, true);
-              }
-            })
-            .catch(console.error);
-        }
-      };
-
-      window.addEventListener("deviceorientation", handleOrientation, true);
-      document.addEventListener("click", requestOrientationPermission, { once: true });
-
-      return () => {
-        window.removeEventListener("deviceorientation", handleOrientation, true);
-        document.removeEventListener("click", requestOrientationPermission);
-      };
+      // Orbiting planets are hidden on mobile devices, so orientation tracking is disabled to save CPU and battery
+      return;
     } else {
       const handleMouseMove = (e: MouseEvent) => {
         mouseX.set(e.clientX);
@@ -784,7 +750,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.95 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: false, amount: 0.15 }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="bg-[#0B0C10]/60 backdrop-blur-md border border-white/10 p-8 md:p-12 max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-cyan-500/5"
           >
@@ -1004,7 +970,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.5 }}
+          viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6 }}
           className="pt-20 px-6 text-center"
         >
@@ -1033,7 +999,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: -25 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.5 }}
+            viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-20"
           >
@@ -1050,7 +1016,7 @@ export default function Home() {
                   key={i}
                   initial={{ opacity: 0, y: 50, rotateX: 10 }}
                   whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
+                  viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.7, delay: i * 0.1 }}
                 >
                   <motion.div
@@ -1109,7 +1075,7 @@ export default function Home() {
             id="sertifikalar"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: false, amount: 0.5 }}
+            viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6 }}
             className="text-center mt-32 mb-16 relative z-10"
           >
@@ -1126,7 +1092,7 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.85, y: 15 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.05, type: "spring", stiffness: 100, damping: 15 }}
-                viewport={{ once: false, amount: 0.1 }}
+                viewport={{ once: true, amount: 0.1 }}
                 whileHover={{
                   y: -6,
                   boxShadow: "0 15px 30px -10px rgba(6,182,212,0.15)",
@@ -1166,7 +1132,7 @@ export default function Home() {
             id="egitim"
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.5 }}
+            viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6 }}
             className="text-center mt-32 mb-16 relative z-10"
           >
@@ -1183,7 +1149,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: i % 2 === 0 ? -40 : 40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: i * 0.08 }}
-                viewport={{ once: false, amount: 0.1 }}
+                viewport={{ once: true, amount: 0.1 }}
                 whileHover={{
                   y: -6,
                   boxShadow: "0 15px 30px -10px rgba(6,182,212,0.15)",
@@ -1508,7 +1474,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.05 }}
+            viewport={{ once: true, amount: 0.05 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="w-full glass border border-cyan-500/20 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col"
           >
@@ -1688,7 +1654,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.15 }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.7, type: "spring", stiffness: 80, damping: 15 }}
             className="glass neon-border p-12 rounded-3xl relative overflow-hidden"
           >

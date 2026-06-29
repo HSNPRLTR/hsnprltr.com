@@ -31,6 +31,8 @@ const ThreeStarfield = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+
     let scene: THREE.Scene;
     let camera: THREE.PerspectiveCamera;
     let renderer: THREE.WebGLRenderer;
@@ -72,99 +74,101 @@ const ThreeStarfield = ({
 
     renderer = new THREE.WebGLRenderer({ alpha: true });
     renderer.setClearColor(0x000011, 1);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(WIDTH, HEIGHT);
     containerRef.current.appendChild(renderer.domElement);
 
-    // Load Skybox GLB
-    const loader = new GLTFLoader();
-    loader.setMeshoptDecoder(MeshoptDecoder);
-    loader.load(
-      "/Skybox/inside_galaxy_skybox_hdri_360_panorama.glb",
-      (gltf) => {
-        skyboxGroup = new THREE.Group();
-        skyboxGroup.add(gltf.scene);
+    // Load Skybox GLB only on desktop to save mobile bandwidth, decoders, and massive WebGL VRAM/rendering overhead
+    if (!isMobile) {
+      const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
+      loader.load(
+        "/Skybox/inside_galaxy_skybox_hdri_360_panorama.glb",
+        (gltf) => {
+          skyboxGroup = new THREE.Group();
+          skyboxGroup.add(gltf.scene);
 
-        // Center the geometry
-        const box = new THREE.Box3().setFromObject(gltf.scene);
-        const center = box.getCenter(new THREE.Vector3());
-        gltf.scene.position.sub(center);
+          // Center the geometry
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          const center = box.getCenter(new THREE.Vector3());
+          gltf.scene.position.sub(center);
 
-        // Scale to fit camera frustum nicely (radius ~900, diameter ~1800)
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) {
-          const targetScale = 1800 / maxDim;
-          skyboxGroup.scale.set(targetScale, targetScale, targetScale);
-        }
+          // Scale to fit camera frustum nicely (radius ~900, diameter ~1800)
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          if (maxDim > 0) {
+            const targetScale = 1800 / maxDim;
+            skyboxGroup.scale.set(targetScale, targetScale, targetScale);
+          }
 
-        // Convert materials to MeshBasicMaterial (unlit) and double sided, no depth write, no fog
-        gltf.scene.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            mesh.renderOrder = -1; // Draw behind stars
-            if (mesh.material) {
-              const convertMaterial = (mat: THREE.Material) => {
-                const params: THREE.MeshBasicMaterialParameters = {
-                  side: THREE.DoubleSide,
-                  depthWrite: false,
-                  depthTest: true,
-                  fog: false
+          // Convert materials to MeshBasicMaterial (unlit) and double sided, no depth write, no fog
+          gltf.scene.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const mesh = child as THREE.Mesh;
+              mesh.renderOrder = -1; // Draw behind stars
+              if (mesh.material) {
+                const convertMaterial = (mat: THREE.Material) => {
+                  const params: THREE.MeshBasicMaterialParameters = {
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                    depthTest: true,
+                    fog: false
+                  };
+
+                  let textureMap = null;
+                  const colorMultiplier = new THREE.Color(0xffffff);
+
+                  if ("emissiveMap" in mat && (mat as any).emissiveMap) {
+                    textureMap = (mat as any).emissiveMap;
+                    if ("emissive" in mat && (mat as any).emissive) {
+                      colorMultiplier.copy((mat as any).emissive);
+                    }
+                  } else if ("map" in mat && (mat as any).map) {
+                    textureMap = (mat as any).map;
+                    if ("color" in mat && (mat as any).color) {
+                      colorMultiplier.copy((mat as any).color);
+                    }
+                  } else {
+                    if ("color" in mat && (mat as any).color) {
+                      colorMultiplier.copy((mat as any).color);
+                    }
+                  }
+
+                  if (textureMap) {
+                    params.map = textureMap;
+                  }
+
+                  // Darken the background skybox (multiply by 0.4 to act as a 60% black transparent panel overlay)
+                  colorMultiplier.multiplyScalar(0.2);
+                  params.color = colorMultiplier;
+
+                  const basicMat = new THREE.MeshBasicMaterial(params);
+                  return basicMat;
                 };
 
-                let textureMap = null;
-                const colorMultiplier = new THREE.Color(0xffffff);
-
-                if ("emissiveMap" in mat && (mat as any).emissiveMap) {
-                  textureMap = (mat as any).emissiveMap;
-                  if ("emissive" in mat && (mat as any).emissive) {
-                    colorMultiplier.copy((mat as any).emissive);
-                  }
-                } else if ("map" in mat && (mat as any).map) {
-                  textureMap = (mat as any).map;
-                  if ("color" in mat && (mat as any).color) {
-                    colorMultiplier.copy((mat as any).color);
-                  }
+                if (Array.isArray(mesh.material)) {
+                  mesh.material = mesh.material.map((mat) => {
+                    const newMat = convertMaterial(mat);
+                    mat.dispose();
+                    return newMat;
+                  });
                 } else {
-                  if ("color" in mat && (mat as any).color) {
-                    colorMultiplier.copy((mat as any).color);
-                  }
+                  const oldMat = mesh.material;
+                  mesh.material = convertMaterial(oldMat);
+                  oldMat.dispose();
                 }
-
-                if (textureMap) {
-                  params.map = textureMap;
-                }
-
-                // Darken the background skybox (multiply by 0.4 to act as a 60% black transparent panel overlay)
-                colorMultiplier.multiplyScalar(0.2);
-                params.color = colorMultiplier;
-
-                const basicMat = new THREE.MeshBasicMaterial(params);
-                return basicMat;
-              };
-
-              if (Array.isArray(mesh.material)) {
-                mesh.material = mesh.material.map((mat) => {
-                  const newMat = convertMaterial(mat);
-                  mat.dispose();
-                  return newMat;
-                });
-              } else {
-                const oldMat = mesh.material;
-                mesh.material = convertMaterial(oldMat);
-                oldMat.dispose();
               }
             }
-          }
-        });
+          });
 
-        scene.add(skyboxGroup);
-      },
-      undefined,
-      (err) => {
-        console.error("Failed to load galaxy skybox GLB:", err);
-      }
-    );
+          scene.add(skyboxGroup);
+        },
+        undefined,
+        (err) => {
+          console.error("Failed to load galaxy skybox GLB:", err);
+        }
+      );
+    }
 
     const onWindowResize = () => {
       const WIDTH = window.innerWidth;
@@ -174,54 +178,23 @@ const ThreeStarfield = ({
       renderer.setSize(WIDTH, HEIGHT);
     };
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
-
     const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX - windowHalfX;
       mouseY = e.clientY - windowHalfY;
     };
 
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.gamma !== null && e.beta !== null) {
-        const clampedGamma = Math.max(-30, Math.min(30, e.gamma));
-        const clampedBeta = Math.max(30, Math.min(90, e.beta)) - 60;
-        
-        mouseX = (clampedGamma / 30) * windowHalfX;
-        mouseY = (clampedBeta / 30) * windowHalfY;
-      }
-    };
-
-    const requestDeviceOrientationPermission = () => {
-      const DeviceOrientationEventClass = (window as any).DeviceOrientationEvent;
-      if (
-        DeviceOrientationEventClass &&
-        typeof DeviceOrientationEventClass.requestPermission === "function"
-      ) {
-        DeviceOrientationEventClass.requestPermission()
-          .then((permissionState: string) => {
-            if (permissionState === "granted") {
-              window.addEventListener("deviceorientation", handleOrientation, true);
-            }
-          })
-          .catch(console.error);
-      }
-    };
-
     window.addEventListener("resize", onWindowResize, false);
 
-    if (isMobile) {
-      window.addEventListener("deviceorientation", handleOrientation, true);
-      document.addEventListener("click", requestDeviceOrientationPermission, { once: true });
-    } else {
+    if (!isMobile) {
       document.addEventListener("mousemove", onMouseMove, false);
     }
 
     function starForge() {
-      const starQty = 45000;
+      const starQty = isMobile ? 10000 : 30000;
       geometry = new THREE.BufferGeometry();
 
       const materialOptions = {
-        size: 1.0,
+        size: isMobile ? 1.5 : 1.0,
         transparent: true,
         opacity: 0.7
       };
@@ -251,12 +224,21 @@ const ThreeStarfield = ({
     };
 
     const render = () => {
-      camera.position.x += (mouseX - camera.position.x) * 0.005;
-      camera.position.y += (-mouseY - camera.position.y) * 0.005;
+      // Camera moves based on mouse only on desktop (keeps mobile 100% static/stable camera)
+      if (!isMobile) {
+        camera.position.x += (mouseX - camera.position.x) * 0.005;
+        camera.position.y += (-mouseY - camera.position.y) * 0.005;
+      }
       camera.lookAt(scene.position);
 
       if (skyboxGroup) {
         skyboxGroup.position.copy(camera.position);
+      }
+
+      // Slowly rotate the stars group to add a subtle dynamic feeling
+      if (stars) {
+        stars.rotation.y += 0.00015;
+        stars.rotation.x += 0.00003;
       }
 
       const isHovered = hoverRef.current;
@@ -334,7 +316,7 @@ const ThreeStarfield = ({
         geometry.attributes.position.needsUpdate = true;
 
         // Shrink star size and fade opacity during pull
-        starStuff.size = 1.0 * (1 - transitionProgress * 0.95);
+        starStuff.size = (isMobile ? 1.5 : 1.0) * (1 - transitionProgress * 0.95);
         starStuff.opacity = 0.7 * (1 - transitionProgress * 0.98);
 
         prevTransitionProgress = transitionProgress;
@@ -349,10 +331,7 @@ const ThreeStarfield = ({
 
     return () => {
       window.removeEventListener("resize", onWindowResize);
-      if (isMobile) {
-        window.removeEventListener("deviceorientation", handleOrientation, true);
-        document.removeEventListener("click", requestDeviceOrientationPermission);
-      } else {
+      if (!isMobile) {
         document.removeEventListener("mousemove", onMouseMove);
       }
 
