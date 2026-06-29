@@ -48,6 +48,13 @@ export default function ProjectRow({
   const [activeDocImageIdx, setActiveDocImageIdx] = useState<number | null>(null);
   const { t } = useLanguage();
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const isMobileSize = window.innerWidth <= 1024;
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobileDevice(isMobileSize || isMobileUA);
+  }, []);
+
   useEffect(() => {
     if (activeImageIdx === null) return;
 
@@ -382,10 +389,9 @@ export default function ProjectRow({
                <ChevronLeft size={32} />
              </button>
  
-             {/* Main Image Container */}
              <motion.div
                key={activeImageIdx}
-               drag="x"
+               drag={isMobileDevice ? "x" : false}
                dragConstraints={{ left: 0, right: 0 }}
                dragElastic={0.6}
                onDragEnd={(e, info) => {
@@ -399,7 +405,7 @@ export default function ProjectRow({
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.95 }}
                transition={{ duration: 0.3 }}
-               className="relative w-full max-w-5xl h-[80vh] flex items-center justify-center p-4 cursor-grab active:cursor-grabbing"
+               className={`relative w-full max-w-5xl h-[80vh] flex items-center justify-center p-4 ${isMobileDevice ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
                style={{ touchAction: "none" }}
                onClick={(e) => e.stopPropagation()}
              >
@@ -532,7 +538,7 @@ export default function ProjectRow({
             {/* Main Image Container */}
             <motion.div
               key={activeDocImageIdx}
-              drag="x"
+              drag={isMobileDevice ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.6}
               onDragEnd={(e, info) => {
@@ -546,7 +552,7 @@ export default function ProjectRow({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[90vw] md:max-w-2xl h-[80vh] flex items-center justify-center p-3 cursor-grab active:cursor-grabbing"
+              className={`relative w-full max-w-[90vw] md:max-w-2xl h-[80vh] flex items-center justify-center p-3 ${isMobileDevice ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
               style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >

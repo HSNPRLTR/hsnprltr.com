@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, Cpu, Terminal, Radio } from "lucide-react";
+import { Cpu, Terminal, Radio } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface IntroVideoLoaderProps {
@@ -162,26 +162,6 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
                 <div className="text-[10px] text-cyan-500/60 font-mono">SECTOR_COORD: 41.0082.28.9784</div>
               </div>
             </div>
-
-            {/* Mute/Unmute button */}
-            <motion.button
-              whileHover={{ scale: 1.05, borderColor: "rgba(34,211,238,0.5)" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleMuteToggle}
-              className="flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 hover:border-cyan-500/40 text-white hover:text-cyan-400 px-4 py-2.5 rounded-xl text-xs md:text-sm font-orbitron tracking-widest transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)] cursor-pointer"
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX size={16} className="text-white/70" />
-                  <span>{t("loader_unmute")}</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 size={16} className="text-cyan-400 animate-bounce" />
-                  <span className="text-cyan-400 shadow-glow">{t("loader_mute")}</span>
-                </>
-              )}
-            </motion.button>
           </div>
 
           {/* Decorative Corner Lines */}

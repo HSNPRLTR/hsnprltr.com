@@ -2023,7 +2023,7 @@ export default function Home() {
             {/* Poster Image Container */}
             <motion.div
               key={enlargedImageSrc}
-              drag="x"
+              drag={isMobileDevice ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.6}
               onDragEnd={(e, info) => {
@@ -2042,7 +2042,7 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-6 cursor-grab active:cursor-grabbing ${enlargedImageAspect}`}
+              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-6 ${isMobileDevice ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${enlargedImageAspect}`}
               style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -2183,7 +2183,7 @@ export default function Home() {
             {/* Main Image Container */}
             <motion.div
               key={enlargedShipImageSrc}
-              drag="x"
+              drag={isMobileDevice ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.6}
               onDragEnd={(e, info) => {
@@ -2202,7 +2202,7 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
+              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 ${isMobileDevice ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
               style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -2273,7 +2273,7 @@ export default function Home() {
             {/* Main Image Container */}
             <motion.div
               key={enlargedSoftwareImageSrc}
-              drag="x"
+              drag={isMobileDevice ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.6}
               onDragEnd={(e, info) => {
@@ -2293,7 +2293,7 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 cursor-grab active:cursor-grabbing"
+              className={`relative w-full max-w-[95vw] h-[96vh] flex items-center justify-center p-2 ${isMobileDevice ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
               style={{ touchAction: "none" }}
               onClick={(e) => e.stopPropagation()}
             >
