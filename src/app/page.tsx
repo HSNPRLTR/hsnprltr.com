@@ -595,43 +595,51 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.4 }}
-              className="absolute bottom-10 z-20 flex flex-col items-center cursor-pointer left-1/2 -translate-x-1/2 md:left-auto md:right-12 md:translate-x-0 pointer-events-auto -space-y-2"
+              className="absolute bottom-28 md:bottom-10 z-20 flex flex-col items-center cursor-pointer left-1/2 -translate-x-1/2 md:left-auto md:right-12 md:translate-x-0 pointer-events-auto gap-2 group"
               onClick={() => {
                 document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              {[0, 1, 2].map((index) => (
-                <motion.div
-                  key={index}
-                  animate={{
-                    opacity: [0.15, 1, 0.15],
-                    y: [0, 4, 0],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: index * 0.15,
-                    ease: "easeInOut",
-                  }}
-                  className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.9)] flex items-center justify-center"
-                >
-                  <svg
-                    width="32"
-                    height="16"
-                    viewBox="0 0 32 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+              {/* Text above the arrows */}
+              <span className="text-[10px] md:text-xs font-orbitron text-cyan-400/80 tracking-[0.25em] uppercase select-none font-bold group-hover:text-cyan-300 transition-colors drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]">
+                {t("hero_scroll_down")}
+              </span>
+
+              {/* Nested Chevrons container */}
+              <div className="flex flex-col items-center -space-y-2.5">
+                {[0, 1, 2].map((index) => (
+                  <motion.div
+                    key={index}
+                    animate={{
+                      opacity: [0.15, 1, 0.15],
+                      y: [0, 4, 0],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: index * 0.15,
+                      ease: "easeInOut",
+                    }}
+                    className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.9)] flex items-center justify-center group-hover:text-cyan-300 transition-colors"
                   >
-                    <path
-                      d="M2 2L16 14L30 2"
-                      stroke="currentColor"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </motion.div>
-              ))}
+                    <svg
+                      width="40"
+                      height="20"
+                      viewBox="0 0 40 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 2L20 18L38 2"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

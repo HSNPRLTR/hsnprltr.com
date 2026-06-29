@@ -11,6 +11,7 @@ interface LanguageToggleProps {
 export default function LanguageToggle({ inline = false }: LanguageToggleProps) {
   const { language, setLanguage } = useLanguage();
   const [scrollY, setScrollY] = React.useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +21,15 @@ export default function LanguageToggle({ inline = false }: LanguageToggleProps) 
     setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  React.useEffect(() => {
+    const handleMobileMenuToggle = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setIsMobileMenuOpen(!!customEvent.detail?.open);
+    };
+    window.addEventListener("mobile-menu-toggle", handleMobileMenuToggle);
+    return () => window.removeEventListener("mobile-menu-toggle", handleMobileMenuToggle);
   }, []);
 
   const isEnglish = language === "en";
@@ -69,12 +79,17 @@ export default function LanguageToggle({ inline = false }: LanguageToggleProps) 
     );
   }
 
+  const showOnMobile = !isScrolled || isMobileMenuOpen;
+  const showOnDesktop = !isScrolled;
+
   return (
     <div 
       className={`fixed z-[60] flex items-center select-none transition-all duration-300 ${
-        isScrolled 
-          ? "top-6 right-24 lg:opacity-0 lg:pointer-events-none" 
-          : "top-6 right-6"
+        isMobileMenuOpen ? "top-6 right-24" : (isScrolled ? "top-6 right-24" : "top-6 right-6")
+      } ${
+        showOnMobile ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      } ${
+        showOnDesktop ? "lg:opacity-100 lg:pointer-events-auto" : "lg:opacity-0 lg:pointer-events-none"
       }`}
     >
       <div 

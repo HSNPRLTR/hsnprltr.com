@@ -81,6 +81,8 @@ export default function Navbar({ isHidden = false }: NavbarProps) {
     } else {
       document.body.style.overflow = "unset";
     }
+    // Dispatch custom event to notify LanguageToggle component
+    window.dispatchEvent(new CustomEvent("mobile-menu-toggle", { detail: { open: isMobileMenuOpen } }));
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -95,8 +97,15 @@ export default function Navbar({ isHidden = false }: NavbarProps) {
   };
 
   const handleMobileLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    document.body.style.overflow = "unset";
     setIsMobileMenuOpen(false);
-    scrollToSection(e, href);
+    setTimeout(() => {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
   };
 
   const toggleAccordion = (title: string) => {
@@ -214,17 +223,25 @@ export default function Navbar({ isHidden = false }: NavbarProps) {
                     return (
                       <div key={link.target} className="w-full flex flex-col items-center">
                         {hasChildren ? (
-                          <button
-                            onClick={() => toggleAccordion(link.title)}
-                            className="text-xl md:text-2xl font-orbitron font-semibold text-gray-200 hover:text-cyan-400 transition-colors uppercase tracking-widest flex items-center gap-2 py-2.5 cursor-pointer"
-                          >
-                            {link.title}
-                            <ChevronDown
-                              size={18}
-                              className={`transition-transform duration-300 text-cyan-500/80 ${isExpanded ? "rotate-180 text-cyan-400" : ""
-                                }`}
-                            />
-                          </button>
+                          <div className="flex items-center gap-2 py-1">
+                            <a
+                              href={link.target}
+                              onClick={(e) => handleMobileLinkClick(e, link.target)}
+                              className="text-xl md:text-2xl font-orbitron font-semibold text-gray-200 hover:text-cyan-400 transition-colors uppercase tracking-widest cursor-pointer"
+                            >
+                              {link.title}
+                            </a>
+                            <button
+                              onClick={() => toggleAccordion(link.title)}
+                              className="p-3 text-cyan-500/80 hover:text-cyan-400 cursor-pointer flex items-center justify-center"
+                              aria-label="Toggle Submenu"
+                            >
+                              <ChevronDown
+                                size={22}
+                                className={`transition-transform duration-300 ${isExpanded ? "rotate-180 text-cyan-400" : ""}`}
+                              />
+                            </button>
+                          </div>
                         ) : (
                           <a
                             href={link.target}

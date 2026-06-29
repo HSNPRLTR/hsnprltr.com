@@ -16,6 +16,7 @@ export const translations = {
     // Hero
     hero_title: "HASAN PARLATIR",
     hero_subtitle: "A Game Designer's Portfolio",
+    hero_scroll_down: "SCROLL DOWN",
 
     // menuPlanets
     planet_games: "My Games",
@@ -215,6 +216,7 @@ export const translations = {
     // Hero
     hero_title: "HASAN PARLATIR",
     hero_subtitle: "Bir Oyun Tasarımcısının Portfolyosu",
+    hero_scroll_down: "AŞAĞI KAYDIR",
 
     // menuPlanets
     planet_games: "Oyunlarım",
