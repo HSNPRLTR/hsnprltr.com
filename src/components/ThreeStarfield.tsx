@@ -190,7 +190,7 @@ const ThreeStarfield = ({
     }
 
     function starForge() {
-      const starQty = isMobile ? 10000 : 30000;
+      const starQty = isMobile ? 10000 : 45000;
       geometry = new THREE.BufferGeometry();
 
       const materialOptions = {

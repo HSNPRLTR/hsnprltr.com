@@ -189,17 +189,17 @@ const MovingSatellite = ({ onClick }: { onClick: () => void }) => {
           animate={
             isHovered
               ? {
-                  scale: 1.25,
-                  opacity: 1,
-                  filter: "brightness(1.25) drop-shadow(0 0 15px rgba(34,211,238,0.8))"
-                }
+                scale: 1.25,
+                opacity: 1,
+                filter: "brightness(1.25) drop-shadow(0 0 15px rgba(34,211,238,0.8))"
+              }
               : isBlinking
-              ? {
+                ? {
                   scale: 1,
                   opacity: [0.4, 1, 0.4],
                   filter: "brightness(1) drop-shadow(0 0 5px rgba(34,211,238,0.2))"
                 }
-              : {
+                : {
                   scale: 1,
                   opacity: 1,
                   filter: "brightness(1) drop-shadow(0 0 10px rgba(34,211,238,0.3))"
@@ -209,7 +209,7 @@ const MovingSatellite = ({ onClick }: { onClick: () => void }) => {
             isHovered
               ? { type: "spring", stiffness: 300, damping: 15 }
               : isBlinking
-              ? {
+                ? {
                   opacity: {
                     duration: 2,
                     repeat: Infinity,
@@ -217,7 +217,7 @@ const MovingSatellite = ({ onClick }: { onClick: () => void }) => {
                   },
                   scale: { duration: 0.3 }
                 }
-              : { duration: 0.3 }
+                : { duration: 0.3 }
           }
         >
           <Image
@@ -308,7 +308,7 @@ export default function Home() {
   const [activeEducation, setActiveEducation] = React.useState<number | null>(null);
   const [isMobileDevice, setIsMobileDevice] = React.useState(false);
   const [openProjectModals, setOpenProjectModals] = React.useState<Record<string, boolean>>({});
-  const [isVideoIntroActive, setIsVideoIntroActive] = React.useState(false);
+  const [isVideoIntroActive, setIsVideoIntroActive] = React.useState(true);
   const [isInteractive, setIsInteractive] = React.useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = React.useState(true);
 

@@ -229,7 +229,7 @@ export const translations = {
     about_title: "HAKKIMDA",
     about_bio: "Ben Hasan Parlatır. 5 yıllık Unity ve C# deneyimine sahip bağımsız oyun geliştiricisi ve yazılımcıyım. C++ ile 2D oyun motoru ve ASP.NET Core ile REST API sistemleri geliştirdim. Kodlamanın ötesinde; oyun tasarımı, sistem mimarisi ve görsel medya üretiminde yetkinim. profesyonel düzeyde ekip çalışmasına ayak uydurabilirim ve teknik İngilizceye tam hakimim.",
     about_extra_skills: "EKSTRA BECERILER",
-    about_video_editing: "Video Kurgulama",
+    about_video_editing: "Video Kurgusu",
     about_graphic_design: "Grafik Tasarım",
     about_data_presentation: "Veri & Sunum",
     about_interests: "ILGI ALANLARIM",
