@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Orbitron, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { TransitionProvider } from "@/context/TransitionContext";
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -16,8 +17,7 @@ const inter = Inter({
 const rajdhani = Rajdhani({
   variable: "--font-rajdhani",
   weight: ["300", "400", "500", "600", "700"],
-  // @ts-ignore
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin", "latin-ext"] as any,
 });
 
 export const metadata: Metadata = {
@@ -33,9 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${orbitron.variable} ${inter.variable} ${rajdhani.variable} font-sans text-white antialiased`}>
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+        <TransitionProvider>
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
+        </TransitionProvider>
       </body>
     </html>
   );

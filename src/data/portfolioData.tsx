@@ -2,9 +2,9 @@ import React from "react";
 import { Server, Gamepad2, Globe, Sparkles } from "lucide-react";
 
 export const getInhaledPastImages = () => [
-  "/gallery/Inhaled Past/1.png?v=3",
-  "/gallery/Inhaled Past/2.png?v=3",
-  "/gallery/Inhaled Past/3.png?v=3"
+  "/gallery/Inhaled Past/1.png",
+  "/gallery/Inhaled Past/2.png",
+  "/gallery/Inhaled Past/3.png"
 ];
 
 export const getCarGameImages = () => [
@@ -20,22 +20,25 @@ export const getBackgroundPlanets = () => [
   { src: "/planets/planet.png", x: "10vw", y: "80vh", size: "8vw", opacity: 0.4 },
   { src: "/planets/planet2.png", x: "60vw", y: "10vh", size: "6vw", opacity: 0.1 },
   { src: "/planets/planet3.png", x: "88vw", y: "40vh", size: "5vw", opacity: 0.2 },
-  { src: "/planets/planet4.png", x: "48vw", y: "75vh", size: "8vw", opacity: 0.3 },
-  { src: "/planets/planet5.png", x: "60vw", y: "30vh", size: "7vw", opacity: 0.20 },
+  { src: "/planets/planet4.png", x: "48vw", y: "85vh", size: "8vw", opacity: 0.3 },
+  { src: "/planets/planet5.png", x: "10vw", y: "30vh", size: "7vw", opacity: 0.20 },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getMenuPlanets = (t: (key: any) => string) => [
-  { name: t("planet_games"), href: "#games", model: "/3dplanets/blackhole.glb", x: "-5vw", y: "-15vh", size: "45vw", labelOffset: "-4.5vw", baseScale: 4, hoverRadius: 0.28 },
-  { name: t("planet_projects"), href: "#software", model: "/3dplanets/dathomir.glb", x: "45vw", y: "5vh", size: "15vw", labelOffset: "-3.5vw", baseScale: 5.8 },
-  { name: t("planet_contact"), href: "#contact", model: "/3dplanets/purple_planet.glb", x: "60vw", y: "60vh", size: "15vw", labelOffset: "-3.5vw", baseScale: 3.2 },
-  { name: t("planet_work"), href: "#work-with-me", model: "/3dplanets/supernova-remnant-v4-fast-preview.glb", x: "70vw", y: "5vh", size: "20vw", labelOffset: "-4vw", baseScale: 4 },
-  { name: t("planet_social"), href: "#social", model: "/3dplanets/tatooine.glb", x: "30vw", y: "50vh", size: "20vw", labelOffset: "-3.5vw", baseScale: 5 },
+  { name: t("planet_games"), href: "#games", route: "/MyGames", model: "/3dplanets/blackhole.glb", x: "50vw", y: "50vh", size: "80vw", labelOffset: "-18vw", baseScale: 3.5, hoverRadius: 0.2, autoRotate: false, initialRotation: { x: 0.1, y: 1, z: 0 } },
+  { name: t("planet_projects"), href: "#software", route: "/Software", model: "/3dplanets/dathomir.glb", x: "30vw", y: "20vh", size: "15vw", baseScale: 5.8 },
+  { name: t("planet_contact"), href: "#contact", route: "/Contact", model: "/3dplanets/purple_planet.glb", x: "65vw", y: "80vh", size: "15vw", baseScale: 3.2 },
+  { name: t("planet_work"), href: "#work-with-me", route: "/WorkWithMe", model: "/3dplanets/supernova-remnant-v4-fast-preview.glb", x: "82vw", y: "25vh", size: "20vw", baseScale: 4 },
+  { name: t("planet_social"), href: "#social", route: "/Social", model: "/3dplanets/tatooine.glb", x: "25vw", y: "75vh", size: "20vw", baseScale: 5 },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "aksolotl",
     title: "Aksolotl Gazi",
+    themeColor: "#f97316",
     description: t("game_aksolotl_desc"),
     planetImg: "/gamePlanets/aksolotgaziplanet.png",
     engine: "Unity (C#)",
@@ -54,6 +57,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "justice",
     title: "Justice: Has Faces",
+    themeColor: "#eab308",
     description: t("game_justice_desc"),
     planetImg: "/gamePlanets/jhfplanet.png",
     engine: "Unity (C#)",
@@ -73,6 +77,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "fou",
     title: "Fragments of Us",
+    themeColor: "#fbcfe8",
     description: t("game_fou_desc"),
     planetImg: "/gamePlanets/fouplanet.png",
     engine: "Unity (C#)",
@@ -94,6 +99,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "mermaiden",
     title: "MERMAIDEN",
+    themeColor: "#38bdf8",
     description: t("game_mermaiden_desc"),
     planetImg: "/gamePlanets/mermaidenplanet.png",
     engine: "Unity (C#)",
@@ -125,6 +131,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "eotp",
     title: "Echoes of the Peak",
+    themeColor: "#a855f7",
     description: t("game_eotp_desc"),
     planetImg: "/gamePlanets/eotpplanet.png",
     engine: "Unity (C#)",
@@ -146,6 +153,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "brokenheart",
     title: "Broken Heart",
+    themeColor: "#ef4444",
     description: t("game_brokenheart_desc"),
     planetImg: "/gamePlanets/brokenheartplanet.png",
     engine: "Unity (C#)",
@@ -164,6 +172,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "rrtd",
     title: "Rock & Roll the Dice",
+    themeColor: "#15803d",
     description: t("game_rrtd_desc"),
     planetImg: "/gamePlanets/r&rtdplanet.png",
     engine: "Unity (C#)",
@@ -180,6 +189,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   {
     id: "clozopine",
     title: "CLOZOPINE",
+    themeColor: "#1d4ed8",
     description: t("game_clozopine_desc"),
     planetImg: "/gamePlanets/clozopineplanet.png",
     engine: "Unity (C#)",
@@ -197,6 +207,7 @@ export const getGameProjects = (t: (key: any) => string) => [
   }
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getSoftwareProjects = (t: (key: any) => string, language: string) => [
   {
     title: language === "tr" ? "Akademik REST API Sistemi" : "Academic REST API System",
@@ -260,9 +271,10 @@ export const getSoftwareProjects = (t: (key: any) => string, language: string) =
   }
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getCertificates = (t: (key: any) => string, language: string) => [
   {
-    title: "Introduction to Software Engineering",
+    title: language === "tr" ? "Yazılım Mühendisliğine Giriş" : "Introduction to Software Engineering",
     issuer: "IBM",
     date: "2025",
     credentialUrl: "https://drive.google.com/file/d/1o7Dz3RLkJpyeOBXKztrzAnCGOOQtVOiv/view?usp=drive_link",
@@ -271,7 +283,7 @@ export const getCertificates = (t: (key: any) => string, language: string) => [
     detailedDescription: t("cert_se_detailed")
   },
   {
-    title: "Game Theory",
+    title: language === "tr" ? "Oyun Teorisi" : "Game Theory",
     issuer: "Stanford & Yale University",
     date: "2025",
     credentialUrl: "https://drive.google.com/file/d/1_gmvlHfMvm0stMWC_gTP-oYSkNW9LGD4/view?usp=drive_link",
@@ -280,13 +292,22 @@ export const getCertificates = (t: (key: any) => string, language: string) => [
     detailedDescription: t("cert_gt_detailed")
   },
   {
-    title: "Introduction to Game Design",
+    title: language === "tr" ? "Oyun Tasarımına Giriş" : "Introduction to Game Design",
     issuer: "Epic Games",
     date: "2025",
     credentialUrl: "https://drive.google.com/file/d/1DNZD9gWb_mY8SHjba5KzkC0FMx5rFXdO/view?usp=drive_link",
     skills: ["Game Design", "Epic Games", "Level Design", "Gameplay Mechanics"],
     description: t("cert_gd_desc"),
     detailedDescription: t("cert_gd_detailed")
+  },
+  {
+    title: language === "tr" ? "Oyunlaştırma Tasarım Temelleri" : "Gamification Design Fundamentals",
+    issuer: "BTK Akademi",
+    date: "2025",
+    credentialUrl: "https://drive.google.com/file/d/1uGK63yLj1W9t9r73LyzbpzSmQN6wyQIQ/view?usp=drive_link",
+    skills: ["Gamification", "Design", "Engagement"],
+    description: t("cert_gam_desc"),
+    detailedDescription: t("cert_gam_detailed")
   },
   {
     title: language === "tr" ? "Oyun Pazarlama Temelleri" : "Game Marketing Fundamentals",
@@ -299,6 +320,7 @@ export const getCertificates = (t: (key: any) => string, language: string) => [
   }
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getEducations = (t: (key: any) => string, language: string) => [
   {
     title: language === "tr" ? "Atatürk Anadolu Lisesi" : "Ataturk Anatolian High School",

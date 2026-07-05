@@ -25,6 +25,7 @@ interface ProjectRowProps {
   role?: string;
   gained?: string;
   onModalToggle?: (isOpen: boolean) => void;
+  themeColor?: string;
 }
 
 export default function ProjectRow({
@@ -41,6 +42,7 @@ export default function ProjectRow({
   role = "",
   gained = "",
   onModalToggle,
+  themeColor,
 }: ProjectRowProps) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [activeImageIdx, setActiveImageIdx] = useState<number | null>(null);
@@ -48,11 +50,21 @@ export default function ProjectRow({
   const [activeDocImageIdx, setActiveDocImageIdx] = useState<number | null>(null);
   const { t } = useLanguage();
 
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(() => {
+    const isMobileSize = typeof window !== 'undefined' && window.innerWidth <= 1024;
+    const isMobileUA = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return isMobileSize || isMobileUA;
+  });
+  
   useEffect(() => {
-    const isMobileSize = window.innerWidth <= 1024;
-    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    setIsMobileDevice(isMobileSize || isMobileUA);
+    const handleResize = () => {
+      const isMobileSize = window.innerWidth <= 1024;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobileDevice(isMobileSize || isMobileUA);
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -115,12 +127,14 @@ export default function ProjectRow({
 
   useEffect(() => {
     if (!isGalleryOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveImageIdx(null);
     }
   }, [isGalleryOpen]);
 
   useEffect(() => {
     if (!isDocOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveDocImageIdx(null);
     }
   }, [isDocOpen]);
@@ -165,7 +179,20 @@ export default function ProjectRow({
   const hasGallery = gallery && gallery.length > 0;
 
   return (
-    <section id={id} className="min-h-screen flex items-center justify-center py-20 px-6">
+    <section 
+      id={id} 
+      className="min-h-screen flex items-center justify-center py-20 px-6"
+      onMouseEnter={() => {
+        if (typeof window !== "undefined" && themeColor) {
+          (window as any).setSmokeColor?.(themeColor);
+        }
+      }}
+      onMouseLeave={() => {
+        if (typeof window !== "undefined") {
+          (window as any).resetSmokeColor?.();
+        }
+      }}
+    >
       <div className={`container mx-auto flex flex-col ${isReversed ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-12`}>
 
         {/* Left Side: Visuals */}
@@ -181,22 +208,26 @@ export default function ProjectRow({
             <motion.div
               onClick={() => hasGallery && setIsGalleryOpen(true)}
               className={`absolute inset-0 z-0 rounded-full flex items-center justify-center ${hasGallery ? 'cursor-pointer' : 'cursor-default'}`}
-              style={{ filter: "brightness(1) drop-shadow(0 0 0px rgba(34,211,238,0))" }}
+              style={{ filter: "brightness(1) drop-shadow(0 0 0px rgba(0,0,0,0))" }}
               whileHover={hasGallery ? {
                 scale: 1.05,
-                filter: "brightness(1.12) drop-shadow(0 0 25px rgba(34,211,238,0.6))"
+                filter: `brightness(1.12) drop-shadow(0 0 25px ${themeColor ? themeColor + '99' : 'rgba(34,211,238,0.6)'})`
               } : undefined}
               whileTap={hasGallery ? {
                 scale: 0.98
               } : undefined}
               transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0 }}
             >
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 animate-pulse blur-3xl absolute inset-0 scale-110 pointer-events-none" />
+              <div 
+                className="w-full h-full rounded-full blur-3xl absolute inset-0 scale-110 pointer-events-none animate-pulse" 
+                style={{ backgroundColor: themeColor ? `${themeColor}40` : "rgba(6,182,212,0.2)" }} 
+              />
               <Image
                 src={planetImg}
                 alt={`${title} Planet`}
                 fill
-                className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.3)] pointer-events-none"
+                className="object-contain pointer-events-none"
+                style={{ filter: themeColor ? `drop-shadow(0 0 30px ${themeColor}60)` : "drop-shadow(0 0 30px rgba(34,211,238,0.3))" }}
                 sizes="(max-width: 768px) 100vw, 500px"
               />
             </motion.div>
@@ -231,6 +262,9 @@ export default function ProjectRow({
                       fill
                       className="object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]"
                     />
+                    {/* Glowing HUD ring on mobile/desktop */}
+                    <div className="absolute inset-0 rounded-full border border-cyan-500/40 animate-ping opacity-60 pointer-events-none" />
+                    <div className="absolute inset-[-4px] rounded-full border border-cyan-400/20 animate-pulse pointer-events-none" />
                   </motion.div>
                 </motion.div>
               </div>
@@ -243,7 +277,8 @@ export default function ProjectRow({
               onClick={() => hasGallery && setIsGalleryOpen(true)}
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="text-center mt-4 font-orbitron text-cyan-400/60 text-[10px] uppercase tracking-[0.3em] cursor-pointer hover:text-cyan-300 transition-colors pointer-events-auto select-none"
+              className="text-center mt-4 font-orbitron text-[10px] uppercase tracking-[0.3em] cursor-pointer transition-colors pointer-events-auto select-none"
+              style={{ color: themeColor ? `${themeColor}99` : "rgba(34,211,238,0.6)" }}
             >
               {t("row_galeri_tıkla")}
             </motion.div>
@@ -261,7 +296,7 @@ export default function ProjectRow({
             <h2 className="text-4xl md:text-6xl font-bold font-orbitron text-white mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
               {title}
             </h2>
-            <div className="w-20 h-1 bg-cyan-500 mb-6" />
+            <div className="w-20 h-1 mb-6" style={{ backgroundColor: themeColor || "#06b6d4" }} />
 
             <p className="text-lg md:text-xl font-rajdhani text-gray-300 leading-relaxed max-w-xl">
               {description}
@@ -269,14 +304,14 @@ export default function ProjectRow({
 
             <div className="flex flex-wrap gap-x-8 gap-y-4 mt-6">
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-orbitron uppercase text-cyan-400/50 tracking-wider">{t("row_motor_dil")}</span>
+                <span className="text-[10px] font-orbitron uppercase tracking-wider" style={{ color: themeColor ? `${themeColor}80` : "rgba(34,211,238,0.5)" }}>{t("row_motor_dil")}</span>
                 <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-rajdhani text-white w-fit font-semibold">
                   {engine}
                 </span>
               </div>
               {role && (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-orbitron uppercase text-cyan-400/50 tracking-wider">{t("row_rol")}</span>
+                  <span className="text-[10px] font-orbitron uppercase tracking-wider" style={{ color: themeColor ? `${themeColor}80` : "rgba(34,211,238,0.5)" }}>{t("row_rol")}</span>
                   <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-rajdhani text-white w-fit font-semibold">
                     {role}
                   </span>
@@ -284,7 +319,7 @@ export default function ProjectRow({
               )}
               {gained && (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-orbitron uppercase text-cyan-400/50 tracking-wider">{t("row_kazanim")}</span>
+                  <span className="text-[10px] font-orbitron uppercase tracking-wider" style={{ color: themeColor ? `${themeColor}80` : "rgba(34,211,238,0.5)" }}>{t("row_kazanim")}</span>
                   <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-rajdhani text-white w-fit font-semibold">
                     {gained}
                   </span>
@@ -299,7 +334,8 @@ export default function ProjectRow({
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/40 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all font-orbitron text-xs uppercase tracking-widest rounded-sm"
+                  className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:shadow-lg transition-all font-orbitron text-xs uppercase tracking-widest rounded-sm"
+                  style={{ borderColor: themeColor || "#06b6d4", color: themeColor || "#22d3ee", borderWidth: "1px" }}
                 >
                   {link.icon || <ExternalLink size={14} />}
                   {link.label}
@@ -309,9 +345,9 @@ export default function ProjectRow({
                 href={itchLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-cyan-500/30 hover:border-cyan-500 hover:bg-cyan-500/10 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:text-white group transition-all font-orbitron text-xs uppercase tracking-widest rounded-sm text-cyan-400 relative overflow-hidden"
+                className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 group transition-all font-orbitron text-xs uppercase tracking-widest rounded-sm relative overflow-hidden"
+                style={{ borderColor: themeColor ? `${themeColor}80` : "rgba(6,182,212,0.3)", color: themeColor || "#22d3ee", borderWidth: "1px" }}
               >
-                <div className="absolute inset-0 bg-cyan-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 <Gamepad2 size={14} className="relative z-10" />
                 <span className="relative z-10">{t("row_itch_incele")}</span>
               </a>
@@ -445,17 +481,22 @@ export default function ProjectRow({
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 md:p-10 backdrop-blur-xl"
             onClick={() => setIsDocOpen(false)}
           >
-            <button
-              className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-50"
-              onClick={() => setIsDocOpen(false)}
-            >
-              <X size={32} />
-            </button>
-
-            <div
-              className="glass border border-cyan-500/25 p-6 md:p-10 rounded-3xl max-w-6xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar flex flex-col items-center gap-8 relative"
+             <div
+              className="relative glass border border-cyan-500/30 bg-gradient-to-b from-slate-950/95 via-black/95 to-black p-6 md:p-10 rounded-2xl max-w-6xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar flex flex-col items-center gap-8 shadow-[0_0_40px_rgba(6,182,212,0.15)]"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Close button inside glass container */}
+              <button
+                className="absolute top-6 right-6 text-white/50 hover:text-white hover:scale-110 transition-all p-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 z-50"
+                onClick={() => setIsDocOpen(false)}
+              >
+                <X size={24} />
+              </button>
+              {/* Sci-Fi HUD corner ticks */}
+              <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-cyan-500/80 rounded-tl-sm pointer-events-none" />
+              <div className="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-cyan-500/80 rounded-tr-sm pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-cyan-500/80 rounded-bl-sm pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-cyan-500/80 rounded-br-sm pointer-events-none" />
               {/* Title */}
               <h3 className="text-3xl md:text-4xl font-bold font-orbitron text-center text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
                 {satellite.title}

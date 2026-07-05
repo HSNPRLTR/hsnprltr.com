@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cpu, Terminal, Radio } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useProgress } from "@react-three/drei";
 
 interface IntroVideoLoaderProps {
   onComplete: () => void;
@@ -11,6 +12,7 @@ interface IntroVideoLoaderProps {
 
 export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) {
   const { t } = useLanguage();
+  const { progress } = useProgress();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [isWindowLoaded, setIsWindowLoaded] = useState(false);
@@ -34,29 +36,17 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
     }
   }, []);
 
-  // 5-second countdown timer progress (maps to 90% of the bar)
+  // 3-second minimum countdown timer for the video
   useEffect(() => {
-    const duration = 5000; // 5 seconds
-    const intervalTime = 40; // ~25 fps
-    const increment = (intervalTime / duration) * 90;
-
-    const timer = setInterval(() => {
-      setTimerProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(timer);
-          setMinimumTimeMet(true);
-          return 90;
-        }
-        return prev + increment;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(timer);
+    const timer = setTimeout(() => {
+      setMinimumTimeMet(true);
+    }, 3000); // 3 seconds
+    return () => clearTimeout(timer);
   }, []);
 
-  // Handle final 10% progress once both timer (5s) and page loading are done
+  // Handle final completion state when minimum time is met, window is loaded, AND 3D progress is 100%
   useEffect(() => {
-    if (minimumTimeMet && isWindowLoaded) {
+    if (minimumTimeMet && isWindowLoaded && progress === 100) {
       let currentProgress = 90;
       const interval = setInterval(() => {
         currentProgress += 2;
@@ -68,18 +58,19 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
       }, 30);
       return () => clearInterval(interval);
     }
-  }, [minimumTimeMet, isWindowLoaded]);
+  }, [minimumTimeMet, isWindowLoaded, progress]);
 
   // Handle transition status text
   useEffect(() => {
     if (isDone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatusText(t("loader_loaded"));
-    } else if (timerProgress >= 90 && !isWindowLoaded) {
+    } else if (progress >= 90 && !isWindowLoaded) {
       setStatusText(t("loader_initializing"));
     } else {
       setStatusText(t("loader_loading"));
     }
-  }, [timerProgress, isWindowLoaded, isDone, t]);
+  }, [progress, isWindowLoaded, isDone, t]);
 
   // Attempt to autoplay again if browser initially blocked it
   useEffect(() => {
@@ -101,6 +92,7 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleMuteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (videoRef.current) {
@@ -188,11 +180,12 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
             <div className="w-full bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-1.5 overflow-hidden shadow-2xl relative shadow-cyan-950/20">
               {/* Progress Bar Track */}
               <div className="h-2 md:h-3 rounded-full bg-cyan-950/30 overflow-hidden relative">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-600 via-cyan-400 to-white rounded-full shadow-[0_0_15px_rgba(34,211,238,0.7)]"
-                  style={{ width: `${timerProgress}%` }}
-                  transition={{ ease: "linear" }}
-                />
+                  <motion.div
+                    className="h-full bg-cyan-400 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${Math.max(timerProgress, progress)}%` }}
+                    transition={{ duration: 0.2, ease: "linear" }}
+                  />
               </div>
             </div>
 
@@ -203,8 +196,8 @@ export default function IntroVideoLoader({ onComplete }: IntroVideoLoaderProps) 
                 <span className="text-cyan-400 font-orbitron font-semibold tracking-wider text-xs md:text-sm uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
                   {statusText}
                 </span>
-                <span className="text-[10px] md:text-xs text-white/40">
-                  ({Math.round(timerProgress)}%)
+                <span className="font-orbitron text-[10px] md:text-xs text-cyan-400 tracking-wider w-8 text-right">
+                  {Math.round(Math.max(timerProgress, progress))}%
                 </span>
               </div>
             </div>

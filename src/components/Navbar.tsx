@@ -98,7 +98,6 @@ export default function Navbar({ isHidden = false }: NavbarProps) {
 
   const handleMobileLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
-    document.body.style.overflow = "unset";
     setIsMobileMenuOpen(false);
     setTimeout(() => {
       const element = document.querySelector(href);
@@ -216,7 +215,7 @@ export default function Navbar({ isHidden = false }: NavbarProps) {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.08),transparent_70%)] pointer-events-none" />
 
                 <div className="w-full max-w-md mx-auto flex flex-col items-center gap-4 relative z-10 py-12">
-                  {navLinks.map((link) => {
+                  {navLinks.filter(link => link.target !== "#about").map((link) => {
                     const hasChildren = !!link.children;
                     const isExpanded = activeAccordion === link.title;
 

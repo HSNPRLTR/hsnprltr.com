@@ -10,15 +10,15 @@ interface LanguageToggleProps {
 
 export default function LanguageToggle({ inline = false }: LanguageToggleProps) {
   const { language, setLanguage } = useLanguage();
-  const [scrollY, setScrollY] = React.useState(0);
+  const [scrollY, setScrollY] = React.useState(() => 
+    typeof window !== 'undefined' ? window.scrollY : 0
+  );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
-    // Initialize scroll Y
-    setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -38,7 +38,7 @@ export default function LanguageToggle({ inline = false }: LanguageToggleProps) 
     setLanguage(isEnglish ? "tr" : "en");
   };
 
-  const isScrolled = scrollY > 100;
+  const isScrolled = scrollY > 20;
 
   if (inline) {
     return (
@@ -84,7 +84,7 @@ export default function LanguageToggle({ inline = false }: LanguageToggleProps) 
 
   return (
     <div 
-      className={`fixed z-[60] flex items-center select-none transition-all duration-300 ${
+      className={`fixed z-[99999] flex items-center select-none transition-all duration-300 ${
         isMobileMenuOpen ? "top-6 right-24" : (isScrolled ? "top-6 right-24" : "top-6 right-6")
       } ${
         showOnMobile ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
