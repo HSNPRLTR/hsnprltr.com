@@ -4,6 +4,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { TransitionProvider } from "@/context/TransitionContext";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -38,6 +39,7 @@ export default function RootLayout({
           <LanguageProvider>
             {children}
             <Analytics />
+            <SpeedInsights />
           </LanguageProvider>
         </TransitionProvider>
       </body>
