@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, Volume2, VolumeX, Music } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Music, Upload, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { FaSpotify } from "react-icons/fa6";
@@ -87,6 +87,12 @@ export default function ContactVisualizer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.5);
+  const [customAudioUrl, setCustomAudioUrl] = useState<string | null>(null);
+  const [customAudioName, setCustomAudioName] = useState<string>("");
+  const customAudioUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    customAudioUrlRef.current = customAudioUrl;
+  }, [customAudioUrl]);
   const [mode, setMode] = useState<Mode>("cubic");
   const [theme, setTheme] = useState<ThemeName>("dualStems");
   const [showOverlay, setShowOverlay] = useState(true);
@@ -537,11 +543,16 @@ export default function ContactVisualizer() {
         audioCtxRef.current.close().catch(console.error);
         audioCtxRef.current = null;
       }
+
+      // Revoke custom audio URL if exists
+      if (customAudioUrlRef.current) {
+        URL.revokeObjectURL(customAudioUrlRef.current);
+      }
     };
   }, []);
 
   // Initialize and play music with three-audio silent stems routing
-  const startMusic = async () => {
+  const startMusic = async (urlOverride?: string) => {
     if (audioCtxRef.current) return;
     setIsAudioLoading(true);
     try {
@@ -562,10 +573,14 @@ export default function ContactVisualizer() {
       dataArrayInstrumentalRef.current = new Uint8Array(analyserInstNode.frequencyBinCount);
 
       // 3. Audio Elements setup
+      const activeUrl = urlOverride || customAudioUrl || "/audio/Gunesinkaranlikyuzu.wav";
+      const activeVocalUrl = urlOverride || customAudioUrl || "/audio/vocal.mp3";
+      const activeInstUrl = urlOverride || customAudioUrl || "/audio/instrumental.mp3";
+
       // Master Audio (Audible)
       const audioMaster = new Audio();
       audioMaster.crossOrigin = "anonymous";
-      audioMaster.src = "/audio/Gunesinkaranlikyuzu.wav";
+      audioMaster.src = activeUrl;
       audioMaster.volume = volume;
       audioMaster.muted = isMuted;
       audioMasterRef.current = audioMaster;
@@ -573,7 +588,7 @@ export default function ContactVisualizer() {
       // Vocal Stem (Silent)
       const audioVocal = new Audio();
       audioVocal.crossOrigin = "anonymous";
-      audioVocal.src = "/audio/vocal.mp3";
+      audioVocal.src = activeVocalUrl;
       audioVocal.volume = volume;
       audioVocal.muted = false; // Muted in routing, not element level
       audioVocalRef.current = audioVocal;
@@ -581,7 +596,7 @@ export default function ContactVisualizer() {
       // Instrumental Stem (Silent)
       const audioInst = new Audio();
       audioInst.crossOrigin = "anonymous";
-      audioInst.src = "/audio/instrumental.mp3";
+      audioInst.src = activeInstUrl;
       audioInst.volume = volume;
       audioInst.muted = false; // Muted in routing, not element level
       audioInstrumentalRef.current = audioInst;
@@ -598,6 +613,17 @@ export default function ContactVisualizer() {
       audioMaster.addEventListener("canplay", onCanPlay);
       audioVocal.addEventListener("canplay", onCanPlay);
       audioInst.addEventListener("canplay", onCanPlay);
+
+      // Reset state and rewind when audio completes playing
+      audioMaster.addEventListener("ended", () => {
+        audioMaster.pause();
+        audioVocal.pause();
+        audioInst.pause();
+        audioMaster.currentTime = 0;
+        audioVocal.currentTime = 0;
+        audioInst.currentTime = 0;
+        setIsPlaying(false);
+      });
 
       // 4. Source Connections (Critical Routing)
       // Master Track -> Connects to destination (Audible)
@@ -631,6 +657,146 @@ export default function ContactVisualizer() {
       setShowOverlay(false);
     } catch (error) {
       console.error("AudioContext initialization failed:", error);
+      setIsAudioLoading(false);
+    }
+  };
+
+  // Handle uploading custom audio file
+  const handleCustomAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Revoke previous URL if any
+    if (customAudioUrlRef.current) {
+      URL.revokeObjectURL(customAudioUrlRef.current);
+    }
+
+    // Create object URL
+    const url = URL.createObjectURL(file);
+    setCustomAudioUrl(url);
+    setCustomAudioName(file.name);
+
+    // If audio is already initialized, update the sources on the fly
+    if (audioCtxRef.current) {
+      setIsAudioLoading(true);
+      try {
+        const master = audioMasterRef.current;
+        const vocal = audioVocalRef.current;
+        const inst = audioInstrumentalRef.current;
+
+        if (master && vocal && inst) {
+          master.pause();
+          vocal.pause();
+          inst.pause();
+
+          master.src = url;
+          vocal.src = url;
+          inst.src = url;
+
+          master.load();
+          vocal.load();
+          inst.load();
+
+          // Wait for them to be ready to play
+          let loaded = 0;
+          const onCanPlayCustom = async () => {
+            loaded++;
+            if (loaded === 3) {
+              master.removeEventListener("canplay", onCanPlayCustom);
+              vocal.removeEventListener("canplay", onCanPlayCustom);
+              inst.removeEventListener("canplay", onCanPlayCustom);
+
+              setIsAudioLoading(false);
+              // Play
+              if (audioCtxRef.current?.state === "suspended") {
+                await audioCtxRef.current.resume();
+              }
+              await Promise.all([
+                master.play(),
+                vocal.play(),
+                inst.play()
+              ]);
+              setIsPlaying(true);
+            }
+          };
+
+          master.addEventListener("canplay", onCanPlayCustom);
+          vocal.addEventListener("canplay", onCanPlayCustom);
+          inst.addEventListener("canplay", onCanPlayCustom);
+        }
+      } catch (err) {
+        console.error("Failed to switch to custom audio:", err);
+        setIsAudioLoading(false);
+      }
+    } else {
+      // If audio is not initialized yet, initialize it with this URL
+      setIsAudioLoading(true);
+      await startMusic(url);
+      setCustomAudioName(file.name);
+    }
+  };
+
+  // Reset back to default audio assets
+  const handleResetToDefault = async () => {
+    if (!customAudioUrlRef.current) return;
+    setIsAudioLoading(true);
+
+    // Revoke object URL
+    URL.revokeObjectURL(customAudioUrlRef.current);
+    setCustomAudioUrl(null);
+    setCustomAudioName("");
+
+    if (audioCtxRef.current) {
+      try {
+        const master = audioMasterRef.current;
+        const vocal = audioVocalRef.current;
+        const inst = audioInstrumentalRef.current;
+
+        if (master && vocal && inst) {
+          master.pause();
+          vocal.pause();
+          inst.pause();
+
+          master.src = "/audio/Gunesinkaranlikyuzu.wav";
+          vocal.src = "/audio/vocal.mp3";
+          inst.src = "/audio/instrumental.mp3";
+
+          master.load();
+          vocal.load();
+          inst.load();
+
+          // Wait for them to be ready to play
+          let loaded = 0;
+          const onCanPlayDefault = async () => {
+            loaded++;
+            if (loaded === 3) {
+              master.removeEventListener("canplay", onCanPlayDefault);
+              vocal.removeEventListener("canplay", onCanPlayDefault);
+              inst.removeEventListener("canplay", onCanPlayDefault);
+
+              setIsAudioLoading(false);
+              // Play
+              if (audioCtxRef.current?.state === "suspended") {
+                await audioCtxRef.current.resume();
+              }
+              await Promise.all([
+                master.play(),
+                vocal.play(),
+                inst.play()
+              ]);
+              setIsPlaying(true);
+            }
+          };
+
+          master.addEventListener("canplay", onCanPlayDefault);
+          vocal.addEventListener("canplay", onCanPlayDefault);
+          inst.addEventListener("canplay", onCanPlayDefault);
+        }
+      } catch (err) {
+        console.error("Failed to reset to default audio:", err);
+        setIsAudioLoading(false);
+      }
+    } else {
       setIsAudioLoading(false);
     }
   };
@@ -901,20 +1067,43 @@ export default function ContactVisualizer() {
                 </div>
               </div>
 
-              <button
-                onClick={startMusic}
-                disabled={isAudioLoading}
-                className="relative px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 text-white font-orbitron font-bold uppercase tracking-[0.2em] text-xs rounded-xl border border-white/20 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all cursor-pointer disabled:opacity-50 shrink-0 w-full md:w-auto"
-              >
-                {isAudioLoading ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {language === "tr" ? "YÜKLENİYOR..." : "LOADING..."}
-                  </span>
-                ) : (
-                  <span>{language === "tr" ? "SİNYALİ BAŞLAT" : "ENGAGE BEAT"}</span>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                <button
+                  onClick={() => startMusic()}
+                  disabled={isAudioLoading}
+                  className="relative px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 text-white font-orbitron font-bold uppercase tracking-[0.2em] text-xs rounded-xl border border-white/20 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center min-w-[150px]"
+                >
+                  {isAudioLoading && !customAudioUrl ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {language === "tr" ? "YÜKLENİYOR..." : "LOADING..."}
+                    </span>
+                  ) : (
+                    <span>{language === "tr" ? "SİNYALİ BAŞLAT" : "ENGAGE BEAT"}</span>
+                  )}
+                </button>
+
+                <label className={`relative px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-orbitron font-bold uppercase tracking-[0.2em] text-xs rounded-xl border border-white/20 transition-all cursor-pointer flex items-center justify-center gap-2 ${isAudioLoading ? "opacity-50 cursor-wait pointer-events-none" : ""}`}>
+                  {isAudioLoading && customAudioUrl ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                      <span>{language === "tr" ? "YÜKLENİYOR..." : "LOADING..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} className="text-cyan-400 animate-pulse" />
+                      <span>{language === "tr" ? "MÜZİK YÜKLE" : "UPLOAD MUSIC"}</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    disabled={isAudioLoading}
+                    onChange={handleCustomAudioUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -923,7 +1112,7 @@ export default function ContactVisualizer() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col md:flex-row items-center justify-between gap-6 bg-black/40 backdrop-blur-xl border border-white/10 p-5 rounded-2xl relative overflow-hidden"
+              className="flex flex-col gap-4 bg-black/40 backdrop-blur-xl border border-white/10 p-5 rounded-2xl relative overflow-hidden"
             >
               {/* Corner Sci-fi Accents */}
               <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-fuchsia-500/50" />
@@ -931,104 +1120,137 @@ export default function ContactVisualizer() {
               <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-fuchsia-500/50" />
               <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-fuchsia-500/50" />
 
-              {/* Left panel: Song Details + Animated Equalizer */}
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <div className="w-10 h-10 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30 flex items-center justify-center relative overflow-hidden shrink-0">
-                  <Music className={`w-5 h-5 text-fuchsia-400 ${isPlaying ? "animate-spin" : ""}`} style={{ animationDuration: "6s" }} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-orbitron text-fuchsia-400 tracking-widest font-bold">
-                    {language === "tr" ? "ŞU AN ÇALAN SİNYAL" : "TRANSMITTING TRACK"}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {(() => {
-                      const spotifyLink = "https://open.spotify.com/intl-tr/artist/0EtJtiKuWQJpcU4rpn0cL2?si=JU0HLJtVQYCGPin9Y8oTzg";
-                      return spotifyLink ? (
-                        <a
-                          href={spotifyLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-500 hover:text-green-400 transition-colors duration-200 flex items-center"
-                        >
-                          <FaSpotify size={16} />
-                        </a>
-                      ) : (
-                        <FaSpotify size={16} className="text-green-500/80 flex items-center" />
-                      );
-                    })()}
-                    <h4 className="text-xs font-orbitron text-white tracking-wider font-semibold uppercase">
-                      Güneşin Karanlık Yüzü
-                    </h4>
+              {/* Top Row: Details & Playback Controls */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-3 border-b border-white/5 w-full">
+                {/* Left panel: Song Details + Animated Equalizer */}
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className="w-10 h-10 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30 flex items-center justify-center relative overflow-hidden shrink-0">
+                    <Music className={`w-5 h-5 text-fuchsia-400 ${isPlaying ? "animate-spin" : ""}`} style={{ animationDuration: "6s" }} />
                   </div>
-                  <p className="text-[9px] font-rajdhani text-gray-400 mt-0.5 tracking-widest uppercase">
-                    {language === "tr" ? "Yazar: Haian" : "Author: Haian"}
-                  </p>
+                  <div>
+                    <p className="text-[10px] font-orbitron text-fuchsia-400 tracking-widest font-bold">
+                      {language === "tr" ? "SU AN ÇALAN SINYAL" : "TRANSMITTING TRACK"}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 max-w-[200px] sm:max-w-[300px]">
+                      {customAudioUrl ? (
+                        <Music size={14} className="text-cyan-400 shrink-0" />
+                      ) : (
+                        (() => {
+                          const spotifyLink = "https://open.spotify.com/intl-tr/artist/0EtJtiKuWQJpcU4rpn0cL2?si=JU0HLJtWQYCGPin9Y8oTzg";
+                          return spotifyLink ? (
+                            <a
+                              href={spotifyLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-500 hover:text-green-400 transition-colors duration-200 flex items-center shrink-0"
+                            >
+                              <FaSpotify size={16} />
+                            </a>
+                          ) : (
+                            <FaSpotify size={16} className="text-green-500/80 flex items-center shrink-0" />
+                          );
+                        })()
+                      )}
+                      <h4 className="text-xs font-orbitron text-white tracking-wider font-semibold uppercase truncate" title={customAudioUrl ? customAudioName : undefined}>
+                        {customAudioUrl ? customAudioName : (language === "tr" ? "Günesin Karanlık Yüzü" : "Gunesin Karanlik Yuzu")}
+                      </h4>
+                    </div>
+                    <p className="text-[9px] font-rajdhani text-gray-400 mt-0.5 tracking-widest uppercase">
+                      {customAudioUrl
+                        ? (language === "tr" ? "Kullanıcı Dosyası" : "User Audio File")
+                        : (language === "tr" ? "Yazar: Haian" : "Author: Haian")}
+                    </p>
+                  </div>
+
+                  {/* EQ visualizer bars */}
+                  <div className="flex items-end gap-[3px] h-5 px-2">
+                    {[0, 1, 2, 3, 4].map((bar) => {
+                      const heights = isPlaying ? [12, 18, 8, 20, 10] : [4, 4, 4, 4, 4];
+                      return (
+                        <motion.div
+                          key={bar}
+                          animate={
+                            isPlaying
+                              ? { height: [4, heights[bar], 4] }
+                              : { height: 4 }
+                          }
+                          transition={{
+                            repeat: Infinity,
+                            duration: 0.8 + bar * 0.15,
+                            repeatType: "reverse",
+                            ease: "easeInOut"
+                          }}
+                          className="w-[3px] bg-gradient-to-t from-fuchsia-500 to-cyan-400 rounded-full"
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* EQ visualizer bars */}
-                <div className="flex items-end gap-[3px] h-5 px-2">
-                  {[0, 1, 2, 3, 4].map((bar) => {
-                    const heights = isPlaying ? [12, 18, 8, 20, 10] : [4, 4, 4, 4, 4];
-                    return (
-                      <motion.div
-                        key={bar}
-                        animate={
-                          isPlaying
-                            ? { height: [4, heights[bar], 4] }
-                            : { height: 4 }
-                        }
-                        transition={{
-                          repeat: Infinity,
-                          duration: 0.8 + bar * 0.15,
-                          repeatType: "reverse",
-                          ease: "easeInOut"
-                        }}
-                        className="w-[3px] bg-gradient-to-t from-fuchsia-500 to-cyan-400 rounded-full"
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Middle panel: Music Controls */}
-              <div className="flex items-center gap-6 justify-center w-full md:w-auto">
-                <button
-                  onClick={togglePlay}
-                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-fuchsia-500/50 flex items-center justify-center transition-all cursor-pointer"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-4 h-4 text-white" />
-                  ) : (
-                    <Play className="w-4 h-4 text-white ml-0.5" />
-                  )}
-                </button>
-
-                {/* Audio Volume Slider */}
-                <div className="flex items-center gap-3">
+                {/* Middle panel: Music Controls */}
+                <div className="flex items-center gap-6 justify-center w-full md:w-auto">
                   <button
-                    onClick={toggleMute}
-                    className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    onClick={togglePlay}
+                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-fuchsia-500/50 flex items-center justify-center transition-all cursor-pointer"
                   >
-                    {isMuted || volume === 0 ? (
-                      <VolumeX className="w-4 h-4 text-fuchsia-500" />
+                    {isPlaying ? (
+                      <Pause className="w-4 h-4 text-white" />
                     ) : (
-                      <Volume2 className="w-4 h-4" />
+                      <Play className="w-4 h-4 text-white ml-0.5" />
                     )}
                   </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="w-20 md:w-28 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-fuchsia-500 focus:outline-none focus:ring-0 [&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-fuchsia-500"
-                  />
+
+                  {/* Audio Volume Slider */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={toggleMute}
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {isMuted || volume === 0 ? (
+                        <VolumeX className="w-4 h-4 text-fuchsia-500" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={isMuted ? 0 : volume}
+                      onChange={handleVolumeChange}
+                      className="w-20 md:w-28 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-fuchsia-500 focus:outline-none focus:ring-0 [&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-fuchsia-500"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Right panel: Visualizer Customizer Controls */}
-              <div className="flex items-center flex-wrap gap-4 w-full md:w-auto justify-end">
+              {/* Bottom Row: Visualizer Customizer Controls */}
+              <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 w-full">
+                {customAudioUrl && (
+                  <button
+                    onClick={handleResetToDefault}
+                    disabled={isAudioLoading}
+                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1.5 text-[9px] font-orbitron font-bold tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={language === "tr" ? "Varsayılan Müziğe Dön" : "Reset to Default Music"}
+                  >
+                    <RotateCcw size={12} className={isAudioLoading ? "animate-spin" : ""} />
+                    <span>{language === "tr" ? "VARSAYILAN" : "DEFAULT"}</span>
+                  </button>
+                )}
+
+                <label className={`p-2 bg-white/5 hover:bg-white/10 text-purple-400 hover:text-cyan-300 rounded-lg border border-white/10 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-1.5 text-[9px] font-orbitron font-bold tracking-widest ${isAudioLoading ? "opacity-50 cursor-wait pointer-events-none" : ""}`}>
+                  <Upload size={12} />
+                  <span>{language === "tr" ? "YENI SARKI YUKLE" : "UPLOAD NEW SONG"}</span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    disabled={isAudioLoading}
+                    onChange={handleCustomAudioUpload}
+                    className="hidden"
+                  />
+                </label>
+
                 {/* Theme dropdown */}
                 <div className="relative">
                   <select

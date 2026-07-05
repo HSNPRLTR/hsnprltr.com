@@ -3,6 +3,7 @@ import { Orbitron, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { TransitionProvider } from "@/context/TransitionContext";
+import { Analytics } from "@vercel/analytics/next";
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -36,6 +37,7 @@ export default function RootLayout({
         <TransitionProvider>
           <LanguageProvider>
             {children}
+            <Analytics />
           </LanguageProvider>
         </TransitionProvider>
       </body>

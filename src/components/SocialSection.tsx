@@ -165,7 +165,7 @@ export default function SocialSection() {
               </div>
               <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl">
                 <span className="font-rajdhani text-sm md:text-base text-white font-medium select-all">
-                  [EMAIL_ADDRESS]
+                  hparlatir05@gmail.com
                 </span>
 
                 <div className="relative">
