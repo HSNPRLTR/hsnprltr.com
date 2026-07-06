@@ -162,9 +162,12 @@ const PlanetModel: React.FC<PlanetModelProps> = ({
         const isBlackhole = modelPath.toLowerCase().includes("blackhole");
         if (!isBlackhole) {
           if (autoRotate) {
-            // Custom fast spin for supernova-remnant GLB models
-            const rotationSpeedY = modelPath.toLowerCase().includes("supernova") ? 0.005 : 0.003;
+            // Custom diagonal and slow spin
+            const isSupernova = modelPath.toLowerCase().includes("supernova");
+            const rotationSpeedY = isSupernova ? 0.005 : 0.0012;
+            const rotationSpeedX = isSupernova ? 0.001 : 0.0004;
             modelRef.current.rotation.y += rotationSpeedY;
+            modelRef.current.rotation.x += rotationSpeedX;
           } else {
             // Normal slow spin
             const rotationSpeedY = isCurrentlyHovered ? 0.0003 : 0.0015;

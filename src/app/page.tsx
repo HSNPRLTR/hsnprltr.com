@@ -482,8 +482,8 @@ export default function Home() {
             animate={isVideoIntroActive 
               ? { opacity: 0 } 
               : { 
-                  opacity: 1, 
-                  scale: 1, 
+                  opacity: [0, 1, 1], 
+                  scale: [0.9, 1, 1], 
                   y: ["0vh", "0vh", "-25vh"]
                 }
             }

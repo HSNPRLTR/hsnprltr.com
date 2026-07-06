@@ -236,15 +236,27 @@ const PAGE_TARGETS: Record<string, string> = {
   "/Social": "contact"
 };
 
-export default function PlanetNavFooter() {
+export default function PlanetNavFooter({ externalHoveredNav }: { externalHoveredNav?: string | null } = {}) {
   const pathname = usePathname();
   const { navigateWithHyperspace } = useTransition();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const { t } = useLanguage();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const activeHover = !isMobile && (externalHoveredNav || hoveredNav);
 
   // Add nav-overlay-open class to body when hovering to pause CPU-intensive background VFX
   useEffect(() => {
-    if (hoveredNav) {
+    if (activeHover) {
       document.body.classList.add("nav-overlay-open");
     } else {
       document.body.classList.remove("nav-overlay-open");
@@ -252,7 +264,7 @@ export default function PlanetNavFooter() {
     return () => {
       document.body.classList.remove("nav-overlay-open");
     };
-  }, [hoveredNav]);
+  }, [activeHover]);
 
   const targetDestId = PAGE_TARGETS[pathname];
   const activeData = DESTINATIONS.find(d => d.id === targetDestId);
@@ -296,7 +308,7 @@ export default function PlanetNavFooter() {
 
       {/* --- Holographic Glassmorphism Overlay --- */}
       <AnimatePresence>
-        {hoveredNav && (
+        {activeHover && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

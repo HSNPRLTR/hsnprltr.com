@@ -62,27 +62,42 @@ function LinkBtn({ label, url, isMobile = false }: { label: string; url: string;
   );
 }
 
-/* ── Blinking Contact button ─────────────────────── */
 function ContactBtn({ onHoverChange, isMobile = false }: { onHoverChange?: (hovered: boolean) => void; isMobile?: boolean }) {
   const [hov, setHov]   = useState(false);
   const [vis, setVis]   = useState(true);
   const { t } = useLanguage();
   const { navigateWithHyperspace } = useTransition();
+  const btnRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const id = setInterval(() => setVis(v => !v), 800);
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!hov) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const btn = btnRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+      const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+      if (!inside) {
+        setHov(false);
+        onHoverChange?.(false);
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [hov, onHoverChange]);
+
   return (
     <button
+      ref={btnRef}
       onMouseEnter={() => {
         setHov(true);
         onHoverChange?.(true);
-      }}
-      onMouseLeave={() => {
-        setHov(false);
-        onHoverChange?.(false);
       }}
       onClick={() => navigateWithHyperspace("/Contact")}
       style={{

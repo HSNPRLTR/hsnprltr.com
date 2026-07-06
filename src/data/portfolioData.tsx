@@ -28,9 +28,9 @@ export const getBackgroundPlanets = () => [
 export const getMenuPlanets = (t: (key: any) => string) => [
   { name: t("planet_games"), href: "#games", route: "/MyGames", model: "/3dplanets/blackhole.glb", x: "50vw", y: "50vh", size: "80vw", labelOffset: "-18vw", baseScale: 3.5, hoverRadius: 0.2, autoRotate: false, initialRotation: { x: 0.1, y: 1, z: 0 } },
   { name: t("planet_projects"), href: "#software", route: "/Software", model: "/3dplanets/dathomir.glb", x: "30vw", y: "20vh", size: "15vw", baseScale: 5.8 },
-  { name: t("planet_contact"), href: "#contact", route: "/Contact", model: "/3dplanets/purple_planet.glb", x: "65vw", y: "80vh", size: "15vw", baseScale: 3.2 },
   { name: t("planet_work"), href: "#work-with-me", route: "/WorkWithMe", model: "/3dplanets/supernova-remnant-v4-fast-preview.glb", x: "82vw", y: "25vh", size: "20vw", baseScale: 4 },
   { name: t("planet_social"), href: "#social", route: "/Social", model: "/3dplanets/tatooine.glb", x: "25vw", y: "75vh", size: "20vw", baseScale: 5 },
+  { name: t("planet_contact"), href: "#contact", route: "/Contact", model: "/3dplanets/purple_planet.glb", x: "65vw", y: "80vh", size: "15vw", baseScale: 3.2 },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

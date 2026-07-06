@@ -34,6 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <link rel="preload" as="video" href="/gallery/bigbang.mp4" type="video/mp4" />
+        <link rel="preload" as="video" href="/Skybox/Hyperspace%20kalkis.mp4" type="video/mp4" />
+      </head>
       <body className={`${orbitron.variable} ${inter.variable} ${rajdhani.variable} font-sans text-white antialiased`}>
         <TransitionProvider>
           <LanguageProvider>

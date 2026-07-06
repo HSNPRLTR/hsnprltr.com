@@ -10,6 +10,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import PlanetNavFooter from "@/components/PlanetNavFooter";
 
 type Stage = "error" | "loading" | "main";
 
@@ -444,9 +445,8 @@ export default function SocialPage() {
 
                 {/* RIGHT: 3D Planet (Absolute 60vw width centered container to prevent clipping) */}
                 <motion.div
-                  /* Sadece hedef değeri veriyoruz: Küçülerek 0 (yok olma) boyutuna in. 
-                     Framer Motion başlangıç değerini otomatik olarak 1 kabul eder. */
-                  animate={{ scale: 1 }}
+                  initial={{ scale: 1 }}
+                  animate={{ scale: 0 }}
                   /* 120 saniye (2 dakika) sürer. 
                      ease: "linear" sabit bir hızla uzaklaşmasını sağlar. */
                   transition={{ duration: 120, ease: "linear" }}
@@ -461,10 +461,10 @@ export default function SocialPage() {
                   }}
                 >
                   <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: "min(55vw, 600px)", height: "min(55vw, 600px)" }}>
+                    <div style={{ width: "min(75vw, 850px)", height: "min(75vw, 850px)" }}>
                       <PlanetModel
                         modelPath="/3dplanets/tatooine.glb"
-                        baseScale={6}
+                        baseScale={6.2}
                         autoRotate={true}
                         isInteractive={false}
                       />
@@ -474,59 +474,64 @@ export default function SocialPage() {
               </>
             )}
 
-            {/* Holographic Glassmorphism Overlay for Contact Planet */}
-            <AnimatePresence>
-              {isContactHovered && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed inset-0 z-[9999] flex flex-col items-center justify-center backdrop-blur-3xl bg-black/80 pointer-events-none"
-                  style={{
-                    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)"
-                  }}
-                >
-                  {/* Top Text (Title) */}
-                  <h2
-                    className="text-4xl md:text-5xl lg:text-6xl font-thin mb-1 text-center uppercase tracking-[0.3em] font-orbitron drop-shadow-2xl z-10"
-                    style={{ color: "#ec4899", textShadow: "0 0 20px #ec489980, 0 0 40px #ec489940" }}
-                  >
-                    {t("nav_contact_title")}
-                  </h2>
-                  <div
-                    className="text-sm md:text-md uppercase tracking-[0.4em] font-orbitron -mb-6 md:-mb-10 opacity-80 z-10"
-                    style={{ color: "#ec4899" }}
-                  >
-                    [ {t("nav_clickToEnter")} ]
-                  </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                  {/* Isolated Center 3D Canvas */}
-                  <div className="w-[400px] h-[400px] md:w-[50vh] md:h-[50vh] relative flex-shrink-0 z-0 pointer-events-none">
-                    <Canvas
-                      orthographic
-                      camera={{ zoom: 120, position: [0, 0, 100] }}
-                      gl={{ alpha: true, antialias: true }}
-                    >
-                      <ambientLight intensity={1.5} />
-                      <directionalLight position={[5, 5, 5]} intensity={2} />
-                      <pointLight position={[-5, -5, -5]} intensity={1} color="#ffffff" />
-                      <pointLight position={[0, 2, 0]} intensity={8} color="#ec4899" distance={15} />
+      {/* Holographic Glassmorphism Overlay for Contact Planet */}
+      <AnimatePresence>
+        {stage === "main" && isContactHovered && (
+          <motion.div
+            key="contact-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigateWithHyperspace("/Contact")}
+            className="fixed inset-0 flex flex-col items-center justify-center backdrop-blur-3xl bg-black/80 cursor-pointer"
+            style={{
+              zIndex: 99999,
+              pointerEvents: "auto",
+              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)"
+            }}
+          >
+            {/* Top Text (Title) */}
+            <h2
+              className="text-4xl md:text-5xl lg:text-6xl font-thin mb-1 text-center uppercase tracking-[0.3em] font-orbitron drop-shadow-2xl z-10"
+              style={{ color: "#ec4899", textShadow: "0 0 20px #ec489980, 0 0 40px #ec489940" }}
+            >
+              {t("nav_contact_title")}
+            </h2>
+            <div
+              className="text-sm md:text-md uppercase tracking-[0.4em] font-orbitron -mb-6 md:-mb-10 opacity-80 z-10"
+              style={{ color: "#ec4899" }}
+            >
+              [ {t("nav_clickToEnter")} ]
+            </div>
 
-                      <IsolatedContactModel glb="/3dplanets/purple_planet.glb" scale={1.2} />
-                    </Canvas>
-                  </div>
+            {/* Isolated Center 3D Canvas */}
+            <div className="w-[400px] h-[400px] md:w-[50vh] md:h-[50vh] relative flex-shrink-0 z-0 pointer-events-none">
+              <Canvas
+                orthographic
+                camera={{ zoom: 120, position: [0, 0, 100] }}
+                gl={{ alpha: true, antialias: true }}
+              >
+                <ambientLight intensity={1.5} />
+                <directionalLight position={[5, 5, 5]} intensity={2} />
+                <pointLight position={[-5, -5, -5]} intensity={1} color="#ffffff" />
+                <pointLight position={[0, 2, 0]} intensity={8} color="#ec4899" distance={15} />
 
-                  {/* Bottom Text (Description) */}
-                  <p
-                    className="text-lg md:text-2xl -mt-6 md:-mt-10 text-center font-light max-w-3xl px-6 tracking-wider leading-relaxed drop-shadow-xl z-10"
-                    style={{ color: "#ec4899", textShadow: "0 0 15px #ec489940" }}
-                  >
-                    {t("nav_contact_desc")}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                <IsolatedContactModel glb="/3dplanets/purple_planet.glb" scale={1.2} />
+              </Canvas>
+            </div>
+
+            {/* Bottom Text (Description) */}
+            <p
+              className="text-lg md:text-2xl -mt-6 md:-mt-10 text-center font-light max-w-3xl px-6 tracking-wider leading-relaxed drop-shadow-xl z-10"
+              style={{ color: "#ec4899", textShadow: "0 0 15px #ec489940" }}
+            >
+              {t("nav_contact_desc")}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
